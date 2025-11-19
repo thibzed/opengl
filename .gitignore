@@ -1,0 +1,12 @@
+#éxècutables
+bin/
+*.exe
+*.out
+#fichier de compilation
+*.o
+*.obj
+#IDE
+.vscode/
+.vs/
+#bibliothèques déjà compilées
+lib/
