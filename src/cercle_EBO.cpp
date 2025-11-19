@@ -8,6 +8,8 @@
 
 const int WIDTH = 800;
 const int HEIGHT = 800;
+const float RADIUS = 0.5;
+const int NB_TRIANGLES = 50;
 
 const char *sourceVertexShader = "#version 330 core\n"
     "layout (location = 0) in vec3 Pos\n"
@@ -37,6 +39,96 @@ struct Point{
     float y;
 };
 
+void draw_circle_EBO(const float Radius, const int nb_triangles, const unsigned int shaderProgram){
+
+    float dalpha = 2.0f * M_PI / nb_triangles;
+
+    int taille_vertices = (1 + nb_triangles) * 3;
+    float* vertices = new float[taille_vertices];
+
+    vertices[0] = 0.0f;
+    vertices[1] = 0.0f;
+    vertices[2] = 0.0f;
+
+    for (int i = 0 ; i < nb_triangles ; i++){
+        float alpha = i * dalpha;
+        int base = (i + 1) * 3;
+        vertices[base] = Radius * cos(alpha);
+        vertices[base + 1] = Radius * sin(alpha);
+        vertices[base + 2] = 0.0f;
+    }
+
+    unsigned int* indices = new unsigned int[nb_triangles * 3];
+
+    for (int i = 0; i < nb_triangles ; i++){
+        int base = i * 3;
+        indices[base] = 0;
+        indices[base + 1] = i + 1;
+        indices[base + 2] = (i + 1) % nb_triangles + 1;
+    }
+
+    unsigned int VBO, VAO, EBO;
+    glGenBuffers(1,&VBO);
+    glGenBuffers(1,&EBO);
+    glGenVertexArrays(1,&VAO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER,VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+
+    glBufferData(GL_ARRAY_BUFFER , taille_vertices * sizeof(float), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_triangles * 3 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),(void*)0);
+    glEnableVertexAttribArray(0);
+
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDrawElements(GL_TRIANGLES,nb_triangles * 3 , GL_UNSIGNED_INT,0);
+    glUseProgram(shaderProgram);
+
+    delete[] vertices;
+    delete[] indices;
+}
+
+void draw_circles(const float radius, const int nb_triangles, const unsigned int shaderProgram){
+
+    float* vertices = new float[nb_triangles * 9];
+    float dalpha = (2 * M_PI) / nb_triangles;
+    float alpha = 0;
+    
+    for (int i = 0 ; i < nb_triangles ; i++){
+        int base = i * 9;
+        vertices[base] = 0.0f;
+        vertices[base + 1] = 0.0f;
+        vertices[base + 2] = 0.0f;
+        vertices[base + 3] = radius * cos(alpha); 
+        vertices[base + 4] = radius * sin(alpha);
+        vertices[base + 5] = 0.0f;
+        vertices[base + 6] = radius * cos(alpha + dalpha);
+        vertices[base + 7] = radius * sin(alpha + dalpha);
+        vertices[base + 8] = 0.0f;
+        alpha += dalpha;
+    }
+
+    unsigned int VBO,VAO;
+    glGenBuffers(1,&VBO);
+    glGenVertexArrays(1,&VAO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER,VBO);
+
+    glBufferData(GL_ARRAY_BUFFER, nb_triangles * 9 * sizeof(float), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),(void*)0);
+    glEnableVertexAttribArray(0);
+
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDrawArrays(GL_TRIANGLES,0,3*nb_triangles);
+    glUseProgram(shaderProgram);
+    
+    delete[] vertices;
+}
+
 int main(){
 
     glfwInit();
@@ -58,40 +150,6 @@ int main(){
     return -1;
     }    
 
-    Point A,B;
-    Point O;
-    O.x = 0.0f;
-    O.y = 0.0f;
-
-    float R = 0.5f; // must be between 0 and 1.
-    int nb_triangles = 25 ;
-    float dalpha = 2.0f * M_PI / nb_triangles;
-
-    int taille_vertices = (1 + nb_triangles) * 3;
-    float* vertices = new float[taille_vertices];
-
-    vertices[0] = 0.0f;
-    vertices[1] = 0.0f;
-    vertices[2] = 0.0f;
-
-    for (int i = 0 ; i < nb_triangles ; i++){
-        float alpha = i * dalpha;
-        int base = (i + 1) * 3;
-        vertices[base] = R * cos(alpha);
-        vertices[base + 1] = R * sin(alpha);
-        vertices[base + 2] = 0.0f;
-    }
-
-    unsigned int* indices = new unsigned int[nb_triangles * 3];
-
-    for (int i = 0; i < nb_triangles ; i++){
-        int base = i * 3;
-        indices[base] = 0;
-        indices[base + 1] = i + 1;
-        indices[base + 2] = (i + 1) % nb_triangles + 1;
-    }
-
-
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &sourceVertexShader, NULL);
     glCompileShader(vertexShader);
@@ -108,35 +166,14 @@ int main(){
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    unsigned int VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1,&EBO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-    glBufferData(GL_ARRAY_BUFFER , taille_vertices * sizeof(float), vertices, GL_STATIC_DRAW);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_triangles * 3 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),(void*)0);
-    glEnableVertexAttribArray(0);
-
     while(!glfwWindowShouldClose(window)){
         processInput(window);
-
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glUseProgram(shaderProgram);
-        glDrawElements(GL_TRIANGLES,nb_triangles * 3 , GL_UNSIGNED_INT,0);
-
+        //draw_circle_EBO(RADIUS, NB_TRIANGLES, shaderProgram);
+        draw_circles(RADIUS, NB_TRIANGLES, shaderProgram);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    delete[] vertices;
-    delete[] indices;
     glfwTerminate();
     return 0;
 }
