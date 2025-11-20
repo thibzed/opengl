@@ -67,15 +67,6 @@ void draw_circle_EBO(const float Radius, const int nb_triangles, const unsigned 
         indices[base + 2] = (i + 1) % nb_triangles + 1;
     }
 
-    unsigned int VBO, VAO, EBO;
-    glGenBuffers(1,&VBO);
-    glGenBuffers(1,&EBO);
-    glGenVertexArrays(1,&VAO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER,VBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
-
     glBufferData(GL_ARRAY_BUFFER , taille_vertices * sizeof(float), vertices, GL_STATIC_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, nb_triangles * 3 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),(void*)0);
@@ -109,13 +100,6 @@ void draw_circles(const float radius, const int nb_triangles, const unsigned int
         vertices[base + 8] = 0.0f;
         alpha += dalpha;
     }
-
-    unsigned int VBO,VAO;
-    glGenBuffers(1,&VBO);
-    glGenVertexArrays(1,&VAO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER,VBO);
 
     glBufferData(GL_ARRAY_BUFFER, nb_triangles * 9 * sizeof(float), vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),(void*)0);
@@ -166,13 +150,27 @@ int main(){
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
+    unsigned int VBO,VAO,EBO;
+    glGenVertexArrays(1,&VAO);
+    glGenBuffers(1,&VBO);
+    glGenBuffers(1,&EBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER,VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+
     while(!glfwWindowShouldClose(window)){
         processInput(window);
-        //draw_circle_EBO(RADIUS, NB_TRIANGLES, shaderProgram);
-        draw_circles(RADIUS, NB_TRIANGLES, shaderProgram);
+        draw_circle_EBO(RADIUS, NB_TRIANGLES, shaderProgram);
+        //draw_circles(RADIUS, NB_TRIANGLES, shaderProgram);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    glDeleteVertexArrays(1,&VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteProgram(shaderProgram);
 
     glfwTerminate();
     return 0;
