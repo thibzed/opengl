@@ -46,3 +46,41 @@ target_link_libraries(shader ${OPENGL_LIBS})
 set_target_properties(shader PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
 )
+
+# Exec 4 : Textures
+add_executable(textures
+    src/texture.cpp
+    src/glad.c
+)
+
+target_link_libraries(textures ${OPENGL_LIBS})
+
+set_target_properties(textures PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+)
+
+add_custom_target(run_textures
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_SOURCE_DIR}/bin/textures.exe
+    DEPENDS textures
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+# Exec 5 : 3D
+add_executable(going_3D
+    src/glad.c
+    src/going_3D.cpp
+)
+
+target_link_libraries(going_3D ${OPENGL_LIBS})
+
+set_target_properties(going_3D PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+)
+
+add_custom_target(run_going_3D
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_SOURCE_DIR}/bin/going_3D.exe
+    DEPENDS textures
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
