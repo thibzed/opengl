@@ -1,6 +1,5 @@
 #include "force.hpp"
 
-
 Force::Force(double f_x, double f_y, double f_z){
     components_ = std::vector<double>(3);
     components_[0] = f_x;

@@ -33,13 +33,13 @@ std::vector<std::vector<double>> compute_traj_frictionless (const double v0,  in
     return points;
 }
 
-//int main(){
-//    Force Poids (0 , 0 , -9.81);
-//    std::vector<double> CI_pos = {0 , 0 , 0};
-//    std::vector<double> CI_angle = {30 , 45}; // {Alpha , Beta}
-//    double v0 = 20;
-//    compute_traj_frictionless(v0, 1000, CI_angle, CI_pos, Poids);
-//    return 0;
-//}
+int main(){
+    Force Poids (0 , 0 , -9.81);
+    std::vector<double> CI_pos = {0 , 0 , 0};
+    std::vector<double> CI_angle = {30 , 45}; // {Alpha , Beta}
+    double v0 = 20;
+    compute_traj_frictionless(v0, 1000, CI_angle, CI_pos, Poids);
+    return 0;
+}
 
 
