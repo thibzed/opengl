@@ -16,7 +16,7 @@ std::vector<std::vector<double>> compute_traj_frictionless (const double v0,  in
 
     double alpha = init_angle[0] * M_PI / 180;
     double beta = init_angle[1] * M_PI / 180;
-    double g = Poids.get_component();
+    double g = Poids.get_component()[2];
 
     double t0 = 0.0;
     double tf = (v0 * sin(alpha) + sqrt(v0 * v0 * sin(alpha) * sin(alpha) + 2 * g * init_pos[2])) / g; 

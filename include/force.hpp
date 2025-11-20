@@ -13,7 +13,7 @@ class Force {
     Force(double f_x, double f_y, double f_z);
     ~Force();
 
-    double get_component();
+    std::vector<double> get_component();
 
     private:
     std::vector<double> components_;

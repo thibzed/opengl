@@ -12,3 +12,5 @@ bin/
 lib/
 #CMake 
 build/
+#lib
+glm-1.0.2/

@@ -11,8 +11,8 @@ Force::Force(double f_x, double f_y, double f_z){
 
 Force::~Force(){}
 
-double Force::get_component(){
-    return abs(components_[2]);
+std::vector<double> Force::get_component(){
+    return components_;
 }
 
 void Force::compute_amplitude(std::vector<double> components){
