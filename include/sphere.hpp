@@ -1,27 +1,31 @@
 #ifndef SPHERE_HPP
-#define SHPERE_HPP
+#define SPHERE_HPP
 
 #define _USE_MATH_DEFINES
 #include <cmath>
-#include<iostream>
+
+#include <iostream>
 #include <vector>
+#include <glad/glad.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 class sphere{
 
     public : 
-        sphere(float radius,int nb_points, const std::vector<float>& color) : _R(radius) , _points(nullptr), _color(color){
+        sphere(float radius,int nb_points, const std::vector<float>& color, const glm::vec3 center) : _R(radius) , _points(nullptr), _color(color), _center(center){
             
             if(nb_points < 64){
                 throw std::invalid_argument("Not enought points to correctly render a sphere");
             }
-            std::cout << "INSIDE" << std::endl;
             int nb_lat = floor(sqrt(nb_points));
             int nb_long = nb_lat;
             _points = new float[nb_lat * nb_long * 6]; 
 
             for (int i = 0 ; i < nb_lat; i++){
                 float lat = M_PI * (-0.5f + (float)i/(nb_lat - 1));
-                std::cout << i << std::endl;
                 for(int j = 0 ; j < nb_long ; j++){
                     float lon = 2.0f * M_PI * (float)j / nb_long;
                     
@@ -39,24 +43,55 @@ class sphere{
 
                 }
             }
-        };
+            
+            glGenVertexArrays(1,&_VAO);
+            glGenBuffers(1,&_VBO);
+
+            glBindVertexArray(_VAO);
+            glBindBuffer(GL_ARRAY_BUFFER, _VBO);
+            glBufferData(GL_ARRAY_BUFFER, nb_points * 6 * sizeof(float) , _points, GL_STATIC_DRAW);
+            glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)0);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3 * sizeof(float)));
+            glEnableVertexAttribArray(1);
+
+            _model = glm::translate(_model, _center);
+        }
 
         ~sphere(){
             delete[] _points;
-        };
+        }
 
-        float* get_points(){
+        float* get_points() const {
             return _points;
-        };
+        }
 
-        float get_radius(){
+        float get_radius() const {
             return _R;
-        };
+        }
+        
+        glm::vec3 get_center() const {
+            return _center;
+        }
+
+        glm::mat4 get_model() const {
+            return _model;
+        }
+
+        unsigned int get_VAO() const {
+            return _VAO;
+        }
 
     private:
         float* _points;
         float _R;
         std::vector <float> _color;
+        glm::vec3 _center;
+
+        unsigned int _VBO;
+        unsigned int _VAO;
+
+        glm::mat4 _model = glm::mat4 (1.0f);
 };
 
 #endif

@@ -1,14 +1,10 @@
-#include <glad/glad.h>
+#include "sphere.hpp" //Must be before GLFW include because sphere.hpp holds the include for glad. 
 #include <GLFW/glfw3.h>
-#include <iostream>
 #include "main.h"
 #define _USE_MATH_DEFINES
-#include <cmath>
-#include "sphere.hpp"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <chrono>
+#include <random>
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -159,21 +155,50 @@ int main(){
     glDeleteShader(fragmentShader);
     glDeleteShader(vertexShader);
 
+    //int nb_points = 80 * 80;
+    //glm::vec3 sphere_center1 = {0.0f, 0.0f, 0.0f};
+    //sphere S1(0.5f, nb_points, {1.0f,1.0f,1.0f}, sphere_center1);
+    //float* points1 = S1.get_points();
+//
+    //glm::vec3 sphere_center2 = {0.0f, 1.0f, 0.0f};
+    //sphere S2(0.5f, nb_points, {0.0f,1.0f,0.0f}, sphere_center2);
+    //float* points2 = S2.get_points();
+//
+    //unsigned int VBO[2],VAO[2];
+    //glGenVertexArrays(2,VAO);
+    //glGenBuffers(2,VBO);
+//
+    //glBindVertexArray(VAO[0]);
+    //glBindBuffer(GL_ARRAY_BUFFER,VBO[0]);
+    //glBufferData(GL_ARRAY_BUFFER, nb_points * 6 * sizeof(float), points1, GL_STATIC_DRAW);
+    //glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(float),(void*)0);
+    //glEnableVertexAttribArray(0);
+    //glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3*sizeof(float)));
+    //glEnableVertexAttribArray(1);
+//
+    //glBindVertexArray(VAO[1]);
+    //glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    //glBufferData(GL_ARRAY_BUFFER, nb_points * 6 * sizeof(float), points2, GL_STATIC_DRAW);
+    //glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(float),(void*)0);
+    //glEnableVertexAttribArray(0);
+    //glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3*sizeof(float)));
+    //glEnableVertexAttribArray(1);
+//  
+
+    std::mt19937 generator(std::random_device{}());
+    std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+
+    int nb_spheres = 5;
+    std::vector<sphere> spheres_vector;
+    
     int nb_points = 80 * 80;
-    sphere S(0.5f, nb_points, {1.0f,1.0f,1.0f});
-    float* points = S.get_points();
-    unsigned int VBO,VAO;
-    glGenVertexArrays(1,&VAO);
-    glGenBuffers(1,&VBO);
+    std::vector<float> white = {1.0f,1.0f,1.0f};
 
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER,VBO);
-
-    glBufferData(GL_ARRAY_BUFFER, nb_points * 6 * sizeof(float), points, GL_STATIC_DRAW);
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(float),(void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3*sizeof(float)));
-    glEnableVertexAttribArray(1);
+    for (int i = 0; i < nb_spheres ; i++){
+        glm::vec3 center = {dist(generator), dist(generator), dist(generator)};
+        sphere S (0.5f, nb_points, white, center);
+        spheres_vector.push_back(S);
+    }
 
     while(!glfwWindowShouldClose(window)){
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -200,17 +225,40 @@ int main(){
         glUniformMatrix4fv(viewLoc, 1,GL_FALSE,glm::value_ptr(view));
 
         unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
-        glm::mat4 model = glm::mat4(1.0f);
-        glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model));
+        //glm::mat4 model = glm::mat4(1.0f);
+        //model = glm::translate(model, sphere_center1);
+        //glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model));
+//
+        //glBindVertexArray(VAO[0]);
+        //glDrawArrays(GL_POINTS,0,nb_points);
+//
+        //model = glm::mat4(1.0f);
+        //model = glm::translate(model, sphere_center2);
+        //glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model));
 
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_POINTS,0,nb_points);
+        //glBindVertexArray(VAO[1]);
+        for (const auto &s : spheres_vector){
+            unsigned int VAO = s.get_VAO();
+            glm::mat4 model_s = s.get_model();
+            glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model_s));
+            glBindVertexArray(VAO);
+            glDrawArrays(GL_POINTS,0,nb_points);
+        }
+        //unsigned int VAO_S1 = S1.get_VAO();
+        //glm::mat4 model_S1 = S1.get_model();
+        //glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model_S1));
+        //glBindVertexArray(VAO_S1);
+        //glDrawArrays(GL_POINTS,0,nb_points);
+//
+        //unsigned int VAO_S2 = S2.get_VAO();
+        //glm::mat4 model_S2 = S2.get_model();
+        //glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model_S2));
+        //glBindVertexArray(VAO_S2);
+        //glDrawArrays(GL_POINTS,0,nb_points);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    
     glfwTerminate();
-    //delete[] points;
     return 0;
 }
