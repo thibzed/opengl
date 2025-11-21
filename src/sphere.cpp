@@ -4,6 +4,7 @@
 #include "main.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include "sphere.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -158,31 +159,9 @@ int main(){
     glDeleteShader(fragmentShader);
     glDeleteShader(vertexShader);
 
-    int nb_lat = 100;
-    int nb_long = 100;
-    int nb_points = nb_lat * nb_long;
-    float radius = 0.5f;
-
-    float* points = new float[nb_points * 6];
-    for (int i = 0; i < nb_lat; i++) {
-        float lat = M_PI * (-0.5f + (float)i / (nb_lat - 1)); // -PI/2 à PI/2
-        for (int j = 0; j < nb_long; j++) {
-            float lon = 2.0f * M_PI * (float)j / nb_long; // 0 à 2*PI
-
-            float x = radius * cos(lat) * cos(lon);
-            float y = radius * sin(lat);
-            float z = radius * cos(lat) * sin(lon);
-
-            int base = (i * nb_long + j) * 6;
-            points[base] = x;
-            points[base + 1] = y;
-            points[base + 2] = z;
-            points[base + 3] = 1.0f;
-            points[base + 4] = 1.0f;
-            points[base + 5] = 1.0f;
-        }
-    }
-
+    int nb_points = 80 * 80;
+    sphere S(0.5f, nb_points, {1.0f,1.0f,1.0f});
+    float* points = S.get_points();
     unsigned int VBO,VAO;
     glGenVertexArrays(1,&VAO);
     glGenBuffers(1,&VBO);
@@ -232,6 +211,6 @@ int main(){
     }
     
     glfwTerminate();
-    delete[] points;
+    //delete[] points;
     return 0;
 }
