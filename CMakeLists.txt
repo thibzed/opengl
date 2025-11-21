@@ -84,3 +84,23 @@ add_custom_target(run_going_3D
     DEPENDS textures
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+
+# Exec 6 : Sphere
+add_executable(sphere
+    src/glad.c
+    src/sphere.cpp
+)
+
+target_link_libraries(sphere ${OPENGL_LIBS})
+
+set_target_properties(sphere PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+)
+
+add_custom_target(run_sphere
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_SOURCE_DIR}/bin/sphere.exe
+    DEPENDS sphere
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
