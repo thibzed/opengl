@@ -18,6 +18,9 @@ float fov = 45.0f;
 float roll,pitch;
 float yaw = - 90.0f;
 
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -103,7 +106,7 @@ int main(){
         glfwTerminate();
         return -1;
     }
-    
+
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -113,7 +116,15 @@ int main(){
     }    
 
     while(!glfwWindowShouldClose(window)){
+
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         processInput(window);
+
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

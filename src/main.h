@@ -1,2 +1,2 @@
-#pragma once
-void NewFunction();
+//#pragma once
+//void NewFunction();
