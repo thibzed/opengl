@@ -200,9 +200,17 @@ int main(){
         lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
         
         lightingShader.use();
-        lightingShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-        lightingShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        lightingShader.setVec3("lightPos", lightPos);
+
+        lightingShader.setVec3("light.position", lightPos);
+        lightingShader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+        lightingShader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+        lightingShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        lightingShader.setVec3("material.ambient" , glm::vec3(1.0f, 0.5f, 0.31f));
+        lightingShader.setVec3("material.diffuse",  glm::vec3(1.0f, 0.5f, 0.31f));
+        lightingShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+
+        lightingShader.setFloat("material.shininess", 32.0f);
         lightingShader.setVec3("viewPos", cameraPos);
 
         glm::mat4 projection = glm::perspective(glm::radians(fov), (float)WIDTH / (float)HEIGHT , 0.1f, 100.0f);
