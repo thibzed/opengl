@@ -18,6 +18,6 @@ void main()
    //If scaling is applied. Next line is required.
    Normal = mat3(transpose(inverse(model))) * aNormal; //Transposing matrix in shader
    //is not a good idea, should be done on CPU and then send via Uniform. 
-   gl_Position = model * projection * view * vec4(aPos,1.0f);
+   gl_Position = projection * view * model * vec4(aPos,1.0f);
    TexCoords = aTexCoords;
 }
