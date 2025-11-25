@@ -60,6 +60,8 @@ class sphere{
 
         ~sphere(){
             delete[] _points;
+            glDeleteBuffers(1,&_VBO);
+            glDeleteVertexArrays(1,&_VAO);
         }
 
         float* get_points() const {

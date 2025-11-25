@@ -16,26 +16,95 @@
 class Cube{
 
     public:
-        Cube(glm::vec3 center) : _center(center) , _hasTexture(false), _shader("../shaders/cube_shader/material/cube_material.vs", "../shaders/cube_shader/material/cube_material.fs"){
-            
-            _model = glm::translate(_model, _center);    
+        enum class RenderMode {Material, Texture, Color};
+
+        struct Material {
+            glm::vec3 ambient;
+            glm::vec3 diffuse;
+            glm::vec3 specular;
+            float shininess;
+        };
+
+        Cube(glm::vec3 center, glm::vec3 color) : _center(center), _hasTexture(false), _color(color),
+        _renderMode(RenderMode::Color),
+        _shader("../shaders/cube_shader/basic_cube/cube.vs",
+                "../shaders/cube_shader/basic_cube/cube.fs"){
+
             initVerticesNoTexture();
             setupBuffer();
-        };
-        Cube(glm::vec3 center, const std::string& pathTexture) : _center(center), _hasTexture(true), _shader("../shaders/cube_shader/texture_diffuse/cube_texture_diffuse.vs", "../shaders/cube_shader/texture_diffuse/cube_texture_diffuse.fs"){
+        }
 
-            _model = glm::translate(_model, _center);
+        Cube(glm::vec3 center, const Material& materialProperties) : _center(center), _hasTexture(false),
+        _renderMode(RenderMode::Material), _material(materialProperties),
+        _shader("../shaders/cube_shader/material/cube_material.vs",
+                "../shaders/cube_shader/material/cube_material.fs"){
+            
+            initVerticesNoTexture();
+            setupBuffer();
+        }
+        Cube(glm::vec3 center, const std::string& pathTexture) : _center(center), _hasTexture(true),
+        _renderMode(RenderMode::Texture),
+        _shader("../shaders/cube_shader/texture_diffuse/cube_texture_diffuse.vs",
+                "../shaders/cube_shader/texture_diffuse/cube_texture_diffuse.fs"){
+
             initVerticesWithTexture();
             loadTexture(pathTexture);
             setupBuffer();
         }
+    ~Cube(){
+        glDeleteVertexArrays(1,&_VAO);
+        glDeleteBuffers(1,&_VBO);
+        if(_hasTexture){glDeleteTextures(1,&_texture);}
+    };
 
-    ~Cube(){};
+    void render(const glm::mat4& view, const glm::mat4& projection, 
+                const glm::vec3& lightPos, const glm::vec3& cameraPos){
+        _shader.use();
+        _shader.setMat4("model", get_model());
+        _shader.setMat4("view",view);
+        _shader.setMat4("projection", projection);
+        if (_renderMode == RenderMode::Color){
+            _shader.setVec3("objectColor", _color);
+        }
+        else if (_renderMode == RenderMode::Material){
+            _shader.setVec3("material.ambient", _material.ambient);
+            _shader.setVec3("material.diffuse", _material.diffuse);
+            _shader.setVec3("material.specular", _material.specular);
+            _shader.setFloat("material.shininess",_material.shininess);
+
+            _shader.setVec3("viewPos", cameraPos);
+            _shader.setVec3("light.position", lightPos);
+            _shader.setVec3("light.ambient", glm::vec3(0.2f));
+            _shader.setVec3("light.diffuse", glm::vec3(0.5f));
+            _shader.setVec3("light.specular", glm::vec3(1.0f));
+        }
+        else if (_renderMode == RenderMode::Texture){
+
+            _shader.setVec3("viewPos", cameraPos);
+            _shader.setVec3("light.position", lightPos);
+            _shader.setVec3("light.ambient", glm::vec3(0.2f));
+            _shader.setVec3("light.diffuse", glm::vec3(0.5f));
+            _shader.setVec3("light.specular", glm::vec3(1.0f));
+            _shader.setFloat("material.shininess", 64.0f);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, _texture);
+        }
+        glBindVertexArray(_VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+
+    static Cube withColor(glm::vec3 center, glm::vec3 color){
+        return Cube(center, color);
+    }
+    static Cube withMaterial(glm::vec3 center, const Material& materialProperties){
+        return Cube(center, materialProperties);
+    }
+    static Cube withTexture(glm::vec3 center, const std::string& path){
+        return Cube(center, path);
+    }
     unsigned int get_VAO() const {
         return _VAO;
-    }
-    glm::mat4 get_model() const {
-        return _model;
     }
     Shader get_shader() const {
         return _shader;
@@ -43,18 +112,65 @@ class Cube{
     unsigned int get_texture() const {
         return _texture;
     }
+    glm::vec3 get_color() const {
+        return _color;
+    }
+    void set_color(glm::vec3 color) {
+        _color = color;
+    }
+    void set_position(glm::vec3 newPos) {
+        if (_center != newPos){
+            _center = newPos;
+            _modeldirty = true;
+        }
+    }
+    void set_scale(glm::vec3 scale) {
+        if(_scale != scale){
+            _scale = scale;
+            _modeldirty = true;
+        }
+    }
+    void set_rotation(float angle, glm::vec3 axis){
+        if (_rotation != angle || _rotationAxis != axis){
+            _rotation = angle;
+            _rotationAxis = axis;
+            _modeldirty = true;
+        }
+    }
+    glm::mat4 get_model(){
+        if(_modeldirty){
+            updateModel();
+            _modeldirty = false;
+        }
+        return _model;
+    }
 
     private:
         std::vector<float> _cube_vertices;
         unsigned int _VBO;
         unsigned int _VAO;
+
         bool _hasTexture;
         unsigned int _texture;
         Shader _shader;
+        glm::vec3 _color;
+        Material _material;
+        RenderMode _renderMode;
+        
+        glm::vec3 _scale = glm::vec3(1.0f);
+        glm::vec3 _center = glm::vec3(0.0f);
+        glm::vec3 _rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+        float _rotation = 0.0f;
 
-        glm::vec3 _center;
         glm::mat4 _model = glm::mat4(1.0f);
+        bool _modeldirty = true;
 
+        void updateModel(){
+            _model = glm::mat4(1.0f);
+            _model = glm::translate(_model, _center);
+            _model = glm::rotate(_model, glm::radians(_rotation), _rotationAxis);
+            _model = glm::scale(_model,_scale);
+        }
         void initVerticesNoTexture(){
             _cube_vertices = {
                 // positions          // normals          

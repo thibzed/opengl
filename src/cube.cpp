@@ -123,18 +123,29 @@ int main(){
     std::cout << "Failed to initialize GLAD" << std::endl;
     return -1;
     }    
-
-    Cube C1(glm::vec3(0.0f));
-    unsigned int cube_vao = C1.get_VAO();
-    glm::mat4 model = C1.get_model();
-    Shader cube_shader = C1.get_shader();
-
-    Cube C2(glm::vec3(1.0f) , "../img/container2.png");
-    unsigned int TextureCube_vao = C2.get_VAO();
-    glm::mat4 TextureCubeModel = C2.get_model();
-    Shader TextureCube_shader = C2.get_shader();
-    TextureCube_shader.setInt("material.diffuse",0);
-    TextureCube_shader.setInt("material.specular",0);
+    //Material Cube
+    //Cube C1(glm::vec3(0.0f));
+    //unsigned int cube_vao = C1.get_VAO();
+    //glm::mat4 cube_model = C1.get_model();
+    //Shader cube_shader = C1.get_shader();
+    ////Texture Cube
+    //Cube C2(glm::vec3(1.0f) , "../img/container2.png");
+    //unsigned int TextureCube_vao = C2.get_VAO();
+    //glm::mat4 TextureCubeModel = C2.get_model();
+    //Shader TextureCube_shader = C2.get_shader();
+    //TextureCube_shader.setInt("material.diffuse",0);
+    ////TextureCube_shader.setInt("material.specular",0);
+    ////Lighting Cube
+    Cube LightCube = Cube::withColor(glm::vec3(0.0f), glm::vec3(1.0f));
+    Cube::Material goldProperties;
+    goldProperties.ambient = glm::vec3(0.24725f, 0.1995f, 0.0745f);
+    goldProperties.diffuse = glm::vec3(0.75164f, 0.60648f, 0.22648f);
+    goldProperties.specular = glm::vec3(0.628281f, 0.555802f, 0.366065f);
+    goldProperties.shininess = 51.2f;
+    Cube GoldCube = Cube::withMaterial(glm::vec3(0.0f) ,goldProperties);
+    //unsigned int LightingCube_vao = C3.get_VAO();
+    //glm::mat4 LightingCubeModel = C3.get_model();
+    //Shader LightingCube_shader = C3.get_shader();
 
     while(!glfwWindowShouldClose(window)){
 
@@ -148,55 +159,76 @@ int main(){
 
         processInput(window);
 
+        glm::mat4 projection = glm::perspective(glm::radians(fov) , (float)WIDTH / (float)HEIGHT,0.1f,100.0f);
+        glm::mat4 view = glm::lookAt(cameraPos , cameraPos + cameraFront, cameraUp);
+
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
         lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
         lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
+        LightCube.set_position(lightPos);
+        LightCube.render(view, projection, lightPos, cameraPos);
 
-        cube_shader.use();
-        //vertex shader
-        glm::mat4 projection = glm::perspective(glm::radians(fov) , (float)WIDTH / (float)HEIGHT,0.1f,100.0f);
-        cube_shader.setMat4("projection", projection);
-        glm::mat4 view = glm::lookAt(cameraPos , cameraPos + cameraFront, cameraUp);
-        cube_shader.setMat4("view", view);
-        cube_shader.setMat4("model", model);
-        //fragment shader
-        cube_shader.setVec3("material.ambient",glm::vec3(1.0f, 0.5f, 0.31f));
-        cube_shader.setVec3("material.diffuse",glm::vec3(1.0f, 0.5f, 0.31f));
-        cube_shader.setVec3("material.specular",glm::vec3(0.5f, 0.5f, 0.5f));
-        cube_shader.setFloat("material.shininess",32.0f);
+        GoldCube.render(view, projection, lightPos, cameraPos);
 
-        cube_shader.setVec3("viewPos", cameraPos);
-        cube_shader.setVec3("light.position", lightPos);
-        cube_shader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-        cube_shader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-        cube_shader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-        
-        glBindVertexArray(cube_vao);
-        glDrawArrays(GL_TRIANGLES,0,36);
-
-        TextureCube_shader.use();
-        TextureCube_shader.setMat4("projection", projection);
-        TextureCube_shader.setMat4("view", view);
-        TextureCube_shader.setMat4("model", TextureCubeModel);
-        
-        TextureCube_shader.setVec3("light.position", lightPos);
-        TextureCube_shader.setVec3("viewPos", cameraPos);
-
-        TextureCube_shader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-        TextureCube_shader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-        TextureCube_shader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-        TextureCube_shader.setFloat("material.shininess", 64.0f);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, 1);
-
-        glBindVertexArray(TextureCube_vao);
-        glDrawArrays(GL_TRIANGLES,0,36);
-
+        //lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+        //lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
+        //LightingCubeModel = glm::mat4(1.0f);
+        //LightingCubeModel = glm::translate(LightingCubeModel, lightPos);
+        ////LightingCubeModel = glm::scale(LightingCubeModel, glm::vec3(0.2f));
+        //C3.set_scale(glm::vec3(0.2f));
+//
+        //LightingCube_shader.use();
+        //LightingCube_shader.setMat4("projection", projection);
+        //LightingCube_shader.setMat4("view",view);
+        //LightingCube_shader.setMat4("model", LightingCubeModel);
+        //LightingCube_shader.setVec3("objectColor", C3.get_color());
+//
+        //glBindVertexArray(LightingCube_vao);
+        //glDrawArrays(GL_TRIANGLES,0,36);
+//
+        //cube_shader.use();
+        ////vertex shader
+        //cube_shader.setMat4("projection", projection);
+        //cube_shader.setMat4("view", view);
+        //cube_shader.setMat4("model", cube_model);
+        ////fragment shader
+        //cube_shader.setVec3("material.ambient",glm::vec3(1.0f, 0.5f, 0.31f));
+        //cube_shader.setVec3("material.diffuse",glm::vec3(1.0f, 0.5f, 0.31f));
+        //cube_shader.setVec3("material.specular",glm::vec3(0.5f, 0.5f, 0.5f));
+        //cube_shader.setFloat("material.shininess",32.0f);
+//
+        //cube_shader.setVec3("viewPos", cameraPos);
+        //cube_shader.setVec3("light.position", lightPos);
+        //cube_shader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+        //cube_shader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+        //cube_shader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+        //
+        //glBindVertexArray(cube_vao);
+        //glDrawArrays(GL_TRIANGLES,0,36);
+//
+        //TextureCube_shader.use();
+        //TextureCube_shader.setMat4("projection", projection);
+        //TextureCube_shader.setMat4("view", view);
+        //TextureCube_shader.setMat4("model", TextureCubeModel);
+        //
+        //TextureCube_shader.setVec3("light.position", lightPos);
+        //TextureCube_shader.setVec3("viewPos", cameraPos);
+//
+        //TextureCube_shader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+        //TextureCube_shader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+        //TextureCube_shader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+//
+        //TextureCube_shader.setFloat("material.shininess", 64.0f);
+//
+        //glActiveTexture(GL_TEXTURE0);
+        //glBindTexture(GL_TEXTURE_2D, C2.get_texture());
+//
+        //glBindVertexArray(TextureCube_vao);
+        //glDrawArrays(GL_TRIANGLES,0,36);
+//
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
