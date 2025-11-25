@@ -26,7 +26,7 @@ class Cube{
         };
 
         Cube(glm::vec3 center, glm::vec3 color) : _center(center), _hasTexture(false), _color(color),
-        _renderMode(RenderMode::Color),
+        _renderMode(RenderMode::Color), _hasDualTexture(false),
         _shader("../shaders/cube_shader/basic_cube/cube.vs",
                 "../shaders/cube_shader/basic_cube/cube.fs"){
 
@@ -35,7 +35,7 @@ class Cube{
         }
 
         Cube(glm::vec3 center, const Material& materialProperties) : _center(center), _hasTexture(false),
-        _renderMode(RenderMode::Material), _material(materialProperties),
+        _renderMode(RenderMode::Material), _material(materialProperties), _hasDualTexture(false),
         _shader("../shaders/cube_shader/material/cube_material.vs",
                 "../shaders/cube_shader/material/cube_material.fs"){
             
@@ -43,18 +43,28 @@ class Cube{
             setupBuffer();
         }
         Cube(glm::vec3 center, const std::string& pathTexture) : _center(center), _hasTexture(true),
-        _renderMode(RenderMode::Texture),
+        _renderMode(RenderMode::Texture), _hasDualTexture(false),
         _shader("../shaders/cube_shader/texture_diffuse/cube_texture_diffuse.vs",
                 "../shaders/cube_shader/texture_diffuse/cube_texture_diffuse.fs"){
 
             initVerticesWithTexture();
-            loadTexture(pathTexture);
+            loadTexture(pathTexture, _textureDiffuse);
             setupBuffer();
         }
+        Cube(glm::vec3 center, const std::string& pathDiffuseTexture, const std::string& pathSpecularTexture) : _center(center), _hasTexture(true),
+        _renderMode(RenderMode::Texture), _hasDualTexture(true),
+        _shader("../shaders/cube_shader/texture_specular/cube_texture_specular.vs",
+                "../shaders/cube_shader/texture_specular/cube_texture_specular.fs"){
+                
+                initVerticesWithTexture();
+                loadTexture(pathDiffuseTexture, _textureDiffuse);
+                loadTexture(pathSpecularTexture, _textureSpecular);
+                setupBuffer();
+                }
     ~Cube(){
         glDeleteVertexArrays(1,&_VAO);
         glDeleteBuffers(1,&_VBO);
-        if(_hasTexture){glDeleteTextures(1,&_texture);}
+        if(_hasTexture){glDeleteTextures(1,&_textureDiffuse);}
     };
 
     void render(const glm::mat4& view, const glm::mat4& projection, 
@@ -79,7 +89,6 @@ class Cube{
             _shader.setVec3("light.specular", glm::vec3(1.0f));
         }
         else if (_renderMode == RenderMode::Texture){
-
             _shader.setVec3("viewPos", cameraPos);
             _shader.setVec3("light.position", lightPos);
             _shader.setVec3("light.ambient", glm::vec3(0.2f));
@@ -87,8 +96,22 @@ class Cube{
             _shader.setVec3("light.specular", glm::vec3(1.0f));
             _shader.setFloat("material.shininess", 64.0f);
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, _texture);
+            if(_hasDualTexture){
+                _shader.setInt("material.diffuse", 0);
+                _shader.setInt("material.specular",1);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, _textureDiffuse);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, _textureSpecular);
+            }
+            else{
+                _shader.setInt("material.diffuse",0);
+                _shader.setInt("material.specular",0);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE0, _textureDiffuse);
+            }
         }
         glBindVertexArray(_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -103,14 +126,21 @@ class Cube{
     static Cube withTexture(glm::vec3 center, const std::string& path){
         return Cube(center, path);
     }
+    static Cube withDualTexture (glm::vec3 center, const std::string& diffusePath, const std::string& specularPath){
+        return Cube(center, diffusePath, specularPath);
+    }
+
     unsigned int get_VAO() const {
         return _VAO;
     }
     Shader get_shader() const {
         return _shader;
     }
-    unsigned int get_texture() const {
-        return _texture;
+    unsigned int get_textureDiffuse() const {
+        return _textureDiffuse;
+    }
+    unsigned int get_textureSpecular() const {
+        return _textureSpecular;
     }
     glm::vec3 get_color() const {
         return _color;
@@ -150,8 +180,10 @@ class Cube{
         unsigned int _VBO;
         unsigned int _VAO;
 
-        bool _hasTexture;
-        unsigned int _texture;
+        bool _hasTexture = false;
+        bool _hasDualTexture = false;
+        unsigned int _textureDiffuse = 0;
+        unsigned int _textureSpecular = 0;
         Shader _shader;
         glm::vec3 _color;
         Material _material;
@@ -287,9 +319,9 @@ class Cube{
                 glEnableVertexAttribArray(1);
             }
         }
-        void loadTexture(const std::string& path){
-            glGenTextures(1, &_texture);
-            glBindTexture(GL_TEXTURE_2D, _texture);
+        void loadTexture(const std::string& path, unsigned int& textureID){
+            glGenTextures(1, &textureID);
+            glBindTexture(GL_TEXTURE_2D, textureID);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

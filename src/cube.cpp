@@ -143,6 +143,7 @@ int main(){
     goldProperties.specular = glm::vec3(0.628281f, 0.555802f, 0.366065f);
     goldProperties.shininess = 51.2f;
     Cube GoldCube = Cube::withMaterial(glm::vec3(0.0f) ,goldProperties);
+    Cube WoodCube = Cube::withDualTexture(glm::vec3(1.0f), "../img/container2.png", "../img/container2_specular.png");
     //unsigned int LightingCube_vao = C3.get_VAO();
     //glm::mat4 LightingCubeModel = C3.get_model();
     //Shader LightingCube_shader = C3.get_shader();
@@ -169,9 +170,12 @@ int main(){
         lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
         lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
         LightCube.set_position(lightPos);
+        LightCube.set_scale(glm::vec3(0.2f));
         LightCube.render(view, projection, lightPos, cameraPos);
 
         GoldCube.render(view, projection, lightPos, cameraPos);
+
+        WoodCube.render(view, projection, lightPos, cameraPos);
 
         //lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
         //lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
