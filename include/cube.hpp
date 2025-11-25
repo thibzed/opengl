@@ -16,6 +16,59 @@
 class Cube{
 
     public:
+        
+        Cube(const Cube&) = delete; //Désactive la copie.
+        Cube& operator=(const Cube&) = delete; //Interdit l'affectation par copie.
+
+        
+        Cube(Cube&& other) noexcept : //Constructeur de move std::move
+        _cube_vertices(std::move(other._cube_vertices)), _VAO(other._VAO), _VBO(other._VBO), 
+        _hasTexture(other._hasTexture), _hasDualTexture(other._hasDualTexture), 
+        _textureDiffuse(other._textureDiffuse), _textureSpecular(other._textureSpecular),
+        _shader(std::move(other._shader)), _color(other._color), _material(other._material),
+        _renderMode(other._renderMode), _scale(other._scale), _center(other._center), _rotation(other._rotation),
+        _rotationAxis(other._rotationAxis), _model(other._model), _modeldirty(other._modeldirty){
+            other._VAO = 0;
+            other._VBO = 0;
+            other._textureDiffuse = 0;
+            other._textureSpecular = 0;
+        }
+
+        Cube& operator=(Cube&& other) noexcept { //Affectation par move, other est l'object temporaire dont on vole les ressources, this est le nouvel object qui récup les ressources.
+            if (this != &other) {
+                if(_VAO != 0) glDeleteVertexArrays(1, &_VAO);
+                if(_VBO != 0) glDeleteBuffers(1, &_VBO);
+                if(_hasTexture && _textureDiffuse != 0) glDeleteTextures(1, &_textureDiffuse);
+                if(_hasDualTexture){
+                    if(_textureDiffuse != 0) glDeleteTextures(1, &_textureDiffuse);
+                    if(_textureSpecular != 0) glDeleteTextures(1, &_textureSpecular);
+                }
+            _cube_vertices = std::move(other._cube_vertices);
+             _VBO = other._VBO;
+            _VAO = other._VAO;
+            _hasTexture = other._hasTexture;
+            _hasDualTexture = other._hasDualTexture;
+            _textureDiffuse = other._textureDiffuse;
+            _textureSpecular = other._textureSpecular;
+            _shader = std::move(other._shader);
+            _color = other._color;
+            _material = other._material;
+            _renderMode = other._renderMode;
+            _scale = other._scale;
+            _center = other._center;
+            _rotationAxis = other._rotationAxis;
+            _rotation = other._rotation;
+            _model = other._model;
+            _modeldirty = other._modeldirty;
+
+            other._VAO = 0;
+            other._VBO = 0;
+            other._textureDiffuse = 0;
+            other._textureSpecular = 0;
+            }
+            return *this;
+        }
+
         enum class RenderMode {Material, Texture, Color};
 
         struct Material {
@@ -25,46 +78,14 @@ class Cube{
             float shininess;
         };
 
-        Cube(glm::vec3 center, glm::vec3 color) : _center(center), _hasTexture(false), _color(color),
-        _renderMode(RenderMode::Color), _hasDualTexture(false),
-        _shader("../shaders/cube_shader/basic_cube/cube.vs",
-                "../shaders/cube_shader/basic_cube/cube.fs"){
-
-            initVerticesNoTexture();
-            setupBuffer();
-        }
-
-        Cube(glm::vec3 center, const Material& materialProperties) : _center(center), _hasTexture(false),
-        _renderMode(RenderMode::Material), _material(materialProperties), _hasDualTexture(false),
-        _shader("../shaders/cube_shader/material/cube_material.vs",
-                "../shaders/cube_shader/material/cube_material.fs"){
-            
-            initVerticesNoTexture();
-            setupBuffer();
-        }
-        Cube(glm::vec3 center, const std::string& pathTexture) : _center(center), _hasTexture(true),
-        _renderMode(RenderMode::Texture), _hasDualTexture(false),
-        _shader("../shaders/cube_shader/texture_diffuse/cube_texture_diffuse.vs",
-                "../shaders/cube_shader/texture_diffuse/cube_texture_diffuse.fs"){
-
-            initVerticesWithTexture();
-            loadTexture(pathTexture, _textureDiffuse);
-            setupBuffer();
-        }
-        Cube(glm::vec3 center, const std::string& pathDiffuseTexture, const std::string& pathSpecularTexture) : _center(center), _hasTexture(true),
-        _renderMode(RenderMode::Texture), _hasDualTexture(true),
-        _shader("../shaders/cube_shader/texture_specular/cube_texture_specular.vs",
-                "../shaders/cube_shader/texture_specular/cube_texture_specular.fs"){
-                
-                initVerticesWithTexture();
-                loadTexture(pathDiffuseTexture, _textureDiffuse);
-                loadTexture(pathSpecularTexture, _textureSpecular);
-                setupBuffer();
-                }
     ~Cube(){
         glDeleteVertexArrays(1,&_VAO);
         glDeleteBuffers(1,&_VBO);
         if(_hasTexture){glDeleteTextures(1,&_textureDiffuse);}
+        else if(_hasDualTexture){
+            glDeleteTextures(1,&_textureDiffuse);
+            glDeleteTextures(1,&_textureSpecular);
+        }
     };
 
     void render(const glm::mat4& view, const glm::mat4& projection, 
@@ -91,6 +112,7 @@ class Cube{
         else if (_renderMode == RenderMode::Texture){
             _shader.setVec3("viewPos", cameraPos);
             _shader.setVec3("light.position", lightPos);
+            _shader.setVec3("light.direction",lightPos);
             _shader.setVec3("light.ambient", glm::vec3(0.2f));
             _shader.setVec3("light.diffuse", glm::vec3(0.5f));
             _shader.setVec3("light.specular", glm::vec3(1.0f));
@@ -110,30 +132,38 @@ class Cube{
                 _shader.setInt("material.specular",0);
 
                 glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE0, _textureDiffuse);
+                glBindTexture(GL_TEXTURE_2D, _textureDiffuse);
             }
         }
         glBindVertexArray(_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
-    static Cube withColor(glm::vec3 center, glm::vec3 color){
-        return Cube(center, color);
+    static Cube withColor(glm::vec3 center, glm::vec3 color,
+                          const std::string& vertexShader = "../shaders/cube_shader/basic_cube/cube.vs",
+                          const std::string& fragmentShader = "../shaders/cube_shader/basic_cube/cube.fs"){
+        return Cube(center, color, vertexShader, fragmentShader);
     }
-    static Cube withMaterial(glm::vec3 center, const Material& materialProperties){
-        return Cube(center, materialProperties);
+    static Cube withMaterial(glm::vec3 center, const Material& materialProperties,
+                             const std::string& vertexShader = "../shaders/cube_shader/material/cube_material.vs",
+                             const std::string& fragmentShader = "../shaders/cube_shader/material/cube_material.fs"){
+        return Cube(center, materialProperties, vertexShader, fragmentShader);
     }
-    static Cube withTexture(glm::vec3 center, const std::string& path){
-        return Cube(center, path);
+    static Cube withTexture(glm::vec3 center, const std::string& path,
+                            const std::string& vertexShader = "../shaders/cube_shader/texture_diffuse/cube_texture_diffuse.vs",
+                            const std::string& fragmentShader = "../shaders/cube_shader/texture_diffuse/cube_texture_diffuse.fs"){
+        return Cube(center, path, vertexShader, fragmentShader);
     }
-    static Cube withDualTexture (glm::vec3 center, const std::string& diffusePath, const std::string& specularPath){
-        return Cube(center, diffusePath, specularPath);
+    static Cube withDualTexture(glm::vec3 center, const std::string& diffusePath, const std::string& specularPath,
+                                const std::string& shaderVertex = "../shaders/cube_shader/texture_specular/cube_texture_specular.vs",
+                                const std::string& shaderFragment = "../shaders/cube_shader/texture_specular/cube_texture_specular.fs"){
+        return Cube(center, diffusePath, specularPath, shaderVertex, shaderFragment);
     }
 
     unsigned int get_VAO() const {
         return _VAO;
     }
-    Shader get_shader() const {
+    Shader& get_shader() { //Passage par réfèrence car on ne peut plus copier le shader pour des raisons de sécurité. 
         return _shader;
     }
     unsigned int get_textureDiffuse() const {
@@ -196,6 +226,47 @@ class Cube{
 
         glm::mat4 _model = glm::mat4(1.0f);
         bool _modeldirty = true;
+
+        Cube(glm::vec3 center, glm::vec3 color,
+             const std::string& vertexShader, const std::string& fragmentShader) : _center(center), _hasTexture(false), _color(color),
+             _renderMode(RenderMode::Color), _hasDualTexture(false),
+             _shader(vertexShader.c_str(),fragmentShader.c_str()){
+
+            initVerticesNoTexture();
+            setupBuffer();
+        }
+
+        Cube(glm::vec3 center, const Material& materialProperties,
+             const std::string& vertexShader, const std::string& fragmentShader) : _center(center), _hasTexture(false),
+             _renderMode(RenderMode::Material), _material(materialProperties), _hasDualTexture(false),
+             _shader(vertexShader.c_str(),fragmentShader.c_str()){
+            
+            initVerticesNoTexture();
+            setupBuffer();
+        }
+
+        Cube(glm::vec3 center, const std::string& pathTexture,
+             const std::string& vertexShader,
+             const std::string& fragmentShader) : _center(center), _hasTexture(true),
+             _renderMode(RenderMode::Texture), _hasDualTexture(false),
+             _shader(vertexShader.c_str(),fragmentShader.c_str()){
+
+            initVerticesWithTexture();
+            loadTexture(pathTexture, _textureDiffuse);
+            setupBuffer();
+        }
+
+        Cube(glm::vec3 center, const std::string& pathDiffuseTexture, const std::string& pathSpecularTexture,
+             const std::string& shaderVertex,
+             const std::string& shaderFragment) : _center(center), _hasTexture(true),
+             _renderMode(RenderMode::Texture), _hasDualTexture(true),
+             _shader(shaderVertex.c_str(),shaderFragment.c_str()){
+                
+                initVerticesWithTexture();
+                loadTexture(pathDiffuseTexture, _textureDiffuse);
+                loadTexture(pathSpecularTexture, _textureSpecular);
+                setupBuffer();
+                }
 
         void updateModel(){
             _model = glm::mat4(1.0f);

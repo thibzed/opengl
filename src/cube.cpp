@@ -17,7 +17,7 @@ float lastFrame = 0.0f;
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightPos(-0.2f, -1.0f, -0.3f);
 
 const char* sourceVertexShader = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -136,18 +136,40 @@ int main(){
     //TextureCube_shader.setInt("material.diffuse",0);
     ////TextureCube_shader.setInt("material.specular",0);
     ////Lighting Cube
-    Cube LightCube = Cube::withColor(glm::vec3(0.0f), glm::vec3(1.0f));
-    Cube::Material goldProperties;
-    goldProperties.ambient = glm::vec3(0.24725f, 0.1995f, 0.0745f);
-    goldProperties.diffuse = glm::vec3(0.75164f, 0.60648f, 0.22648f);
-    goldProperties.specular = glm::vec3(0.628281f, 0.555802f, 0.366065f);
-    goldProperties.shininess = 51.2f;
-    Cube GoldCube = Cube::withMaterial(glm::vec3(0.0f) ,goldProperties);
-    Cube WoodCube = Cube::withDualTexture(glm::vec3(1.0f), "../img/container2.png", "../img/container2_specular.png");
+    //Cube LightCube = Cube::withColor(glm::vec3(0.0f), glm::vec3(1.0f));
+    //LightCube.set_scale(glm::vec3(0.2f));
+    //Cube::Material goldProperties;
+    //goldProperties.ambient = glm::vec3(0.24725f, 0.1995f, 0.0745f);
+    //goldProperties.diffuse = glm::vec3(0.75164f, 0.60648f, 0.22648f);
+    //goldProperties.specular = glm::vec3(0.628281f, 0.555802f, 0.366065f);
+    //goldProperties.shininess = 51.2f;
+    //Cube GoldCube = Cube::withMaterial(glm::vec3(0.0f) ,goldProperties);
+    //Cube WoodCube = Cube::withDualTexture(glm::vec3(1.0f), "../img/container2.png", "../img/container2_specular.png");
     //unsigned int LightingCube_vao = C3.get_VAO();
     //glm::mat4 LightingCubeModel = C3.get_model();
     //Shader LightingCube_shader = C3.get_shader();
 
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f), 
+        glm::vec3( 2.0f,  5.0f, -15.0f), 
+        glm::vec3(-1.5f, -2.2f, -2.5f),  
+        glm::vec3(-3.8f, -2.0f, -12.3f),  
+        glm::vec3( 2.4f, -0.4f, -3.5f),  
+        glm::vec3(-1.7f,  3.0f, -7.5f),  
+        glm::vec3( 1.3f, -2.0f, -2.5f),  
+        glm::vec3( 1.5f,  2.0f, -2.5f), 
+        glm::vec3( 1.5f,  0.2f, -1.5f), 
+        glm::vec3(-1.3f,  1.0f, -1.5f)  
+    };
+    std::vector<Cube> cubeContainer;
+    for(unsigned int i = 0 ; i < 10 ; i++){
+        Cube cube = Cube::withDualTexture(cubePositions[i], "../img/container2.png", "../img/container2_specular.png",
+                                          "../shaders/cube_shader/texture_specular/cube_texture_specular.vs",
+                                          "../shaders/cube_shader/texture_specular/cube_texture_specular_directionnal.fs");
+        cube.set_rotation(20.0f * i, glm::vec3(1.0f, 0.3f, 0.5f));
+        cubeContainer.push_back(std::move(cube));
+    };
+    
     while(!glfwWindowShouldClose(window)){
 
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -167,16 +189,18 @@ int main(){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
-        lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-        lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
-        LightCube.set_position(lightPos);
-        LightCube.set_scale(glm::vec3(0.2f));
-        LightCube.render(view, projection, lightPos, cameraPos);
+        //lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+        //lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
+        //LightCube.set_position(lightPos);
+        //LightCube.set_scale(glm::vec3(0.2f));
+        //LightCube.render(view, projection, lightPos, cameraPos);
 
-        GoldCube.render(view, projection, lightPos, cameraPos);
+        //GoldCube.render(view, projection, lightPos, cameraPos);
 
-        WoodCube.render(view, projection, lightPos, cameraPos);
-
+        //WoodCube.render(view, projection, lightPos, cameraPos);
+        for (auto& c : cubeContainer){
+            c.render(view, projection, lightPos, cameraPos);
+        }
         //lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
         //lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
         //LightingCubeModel = glm::mat4(1.0f);
