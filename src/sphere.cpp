@@ -164,11 +164,13 @@ int main(){
     int nb_points = 80 * 80;
     std::vector<float> white = {1.0f,1.0f,1.0f};
 
-    for (int i = 0; i < nb_Spheres ; i++){
-        glm::vec3 center = {dist(generator), dist(generator), dist(generator)};
-        Sphere S (0.5f, nb_points, white, center);
-        Spheres_vector.push_back(std::move(S));
-    }
+    //for (int i = 0; i < nb_Spheres ; i++){
+    //    glm::vec3 center = {dist(generator), dist(generator), dist(generator)};
+    //    Sphere S (0.5f, nb_points, white, center);
+    //    Spheres_vector.push_back(std::move(S));
+    //}
+
+    Sphere S(0.5f, white, glm::vec3(0.0f));
 
     while(!glfwWindowShouldClose(window)){
         float currentFrame = glfwGetTime();
@@ -207,13 +209,15 @@ int main(){
         //glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model));
 
         //glBindVertexArray(VAO[1]);
-        for (const auto &s : Spheres_vector){
-            unsigned int VAO = s.get_VAO();
-            glm::mat4 model_s = s.get_model();
-            glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model_s));
-            glBindVertexArray(VAO);
-            glDrawArrays(GL_POINTS,0,nb_points);
-        }
+        //for (const auto &s : Spheres_vector){
+        //    unsigned int VAO = s.get_VAO();
+        //    glm::mat4 model_s = s.get_model();
+        //    glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model_s));
+        //    glBindVertexArray(VAO);
+        //    glDrawArrays(GL_POINTS,0,nb_points);
+        //}
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        S.render(view, projection);
         //unsigned int VAO_S1 = S1.get_VAO();
         //glm::mat4 model_S1 = S1.get_model();
         //glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model_S1));
