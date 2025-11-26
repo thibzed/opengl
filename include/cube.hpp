@@ -88,7 +88,8 @@ class Cube{
     };
 
     void render(const glm::mat4& view, const glm::mat4& projection, 
-                const glm::vec3& lightPos, const glm::vec3& cameraPos){
+                const glm::vec3& lightPos, const glm::vec3& cameraPos,
+                const glm::vec3& cameraFront){
         _shader.use();
         _shader.setMat4("model", get_model());
         _shader.setMat4("view",view);
@@ -111,14 +112,12 @@ class Cube{
         else if (_renderMode == RenderMode::Texture){
             _shader.setVec3("viewPos", cameraPos);
             _shader.setVec3("light.position", lightPos);
-            _shader.setVec3("light.direction",lightPos);
-            _shader.setVec3("light.ambient", glm::vec3(0.2f));
-            _shader.setVec3("light.diffuse", glm::vec3(0.5f));
+            _shader.setVec3("light.direction",cameraFront); // cameraFront for flashlight, lightPos otherwise
+            _shader.setVec3("light.ambient", glm::vec3(0.1f));
+            _shader.setVec3("light.diffuse", glm::vec3(1.0f));
             _shader.setVec3("light.specular", glm::vec3(1.0f));
             _shader.setFloat("material.shininess", 64.0f);
-            //_shader.setFloat("light.constant", 1.0f);
-            //_shader.setFloat("light.linear", 0.09f);
-            //_shader.setFloat("light.quadratic", 0.032f);
+
 
             if(_hasDualTexture){
                 _shader.setInt("material.diffuse", 0);

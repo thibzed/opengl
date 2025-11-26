@@ -17,7 +17,7 @@ float lastFrame = 0.0f;
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-glm::vec3 lightPos(-0.2f, -1.0f, -0.3f);
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 void processInput(GLFWwindow *window){
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -129,6 +129,9 @@ int main(){
     //glm::mat4 LightingCubeModel = C3.get_model();
     //Shader LightingCube_shader = C3.get_shader();
 
+    Cube lightCube = Cube::withColor(lightPos , glm::vec3(1.0f));
+    lightCube.set_scale(glm::vec3(0.2f));
+
     glm::vec3 cubePositions[] = {
         glm::vec3( 0.0f,  0.0f,  0.0f), 
         glm::vec3( 2.0f,  5.0f, -15.0f), 
@@ -145,9 +148,13 @@ int main(){
     for(unsigned int i = 0 ; i < 10 ; i++){
         Cube cube = Cube::withDualTexture(cubePositions[i], "../img/container2.png", "../img/container2_specular.png",
                                           "../shaders/cube_shader/texture_specular/cube_texture_specular.vs",
-                                          "../shaders/cube_shader/texture_specular/cube_texture_specular_point_light.fs");
+                                          "../shaders/cube_shader/texture_specular/cube_texture_specular_flashlight.fs");
         cube.set_rotation(20.0f * i, glm::vec3(1.0f, 0.3f, 0.5f));
-        cube.set_light_attenuation(1.0f, 0.09f, 0.032f);
+        cube.set_light_attenuation(1.0f,0.09f,0.032f);
+        cube.get_shader().setVec3("light.position", cameraPos);
+        cube.get_shader().setVec3("light.direction", cameraFront);
+        cube.get_shader().setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
+        
         cubeContainer.push_back(std::move(cube));
     };
     
@@ -179,8 +186,9 @@ int main(){
         //GoldCube.render(view, projection, lightPos, cameraPos);
 
         //WoodCube.render(view, projection, lightPos, cameraPos);
+        //lightCube.render(view, projection, lightPos, cameraPos);
         for (auto& c : cubeContainer){
-            c.render(view, projection, lightPos, cameraPos);
+            c.render(view, projection, lightPos, cameraPos, cameraFront);
         }
         //lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
         //lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
