@@ -1,4 +1,4 @@
-#include "sphere.hpp" //Must be before GLFW include because sphere.hpp holds the include for glad. 
+#include "Sphere.hpp" //Must be before GLFW include because Sphere.hpp holds the include for glad. 
 #include <GLFW/glfw3.h>
 #include "main.h"
 #define _USE_MATH_DEFINES
@@ -158,16 +158,16 @@ int main(){
     std::mt19937 generator(std::random_device{}());
     std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
 
-    int nb_spheres = 5;
-    std::vector<sphere> spheres_vector;
+    int nb_Spheres = 20;
+    std::vector<Sphere> Spheres_vector;
     
     int nb_points = 80 * 80;
     std::vector<float> white = {1.0f,1.0f,1.0f};
 
-    for (int i = 0; i < nb_spheres ; i++){
+    for (int i = 0; i < nb_Spheres ; i++){
         glm::vec3 center = {dist(generator), dist(generator), dist(generator)};
-        sphere S (0.5f, nb_points, white, center);
-        spheres_vector.push_back(S);
+        Sphere S (0.5f, nb_points, white, center);
+        Spheres_vector.push_back(std::move(S));
     }
 
     while(!glfwWindowShouldClose(window)){
@@ -196,18 +196,18 @@ int main(){
 
         unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
         //glm::mat4 model = glm::mat4(1.0f);
-        //model = glm::translate(model, sphere_center1);
+        //model = glm::translate(model, Sphere_center1);
         //glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model));
 //
         //glBindVertexArray(VAO[0]);
         //glDrawArrays(GL_POINTS,0,nb_points);
 //
         //model = glm::mat4(1.0f);
-        //model = glm::translate(model, sphere_center2);
+        //model = glm::translate(model, Sphere_center2);
         //glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model));
 
         //glBindVertexArray(VAO[1]);
-        for (const auto &s : spheres_vector){
+        for (const auto &s : Spheres_vector){
             unsigned int VAO = s.get_VAO();
             glm::mat4 model_s = s.get_model();
             glUniformMatrix4fv(modelLoc,1,GL_FALSE,glm::value_ptr(model_s));

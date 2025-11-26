@@ -1,5 +1,5 @@
-#ifndef SPHERE_HPP
-#define SPHERE_HPP
+#ifndef Sphere_HPP
+#define Sphere_HPP
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -12,15 +12,44 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-class sphere{
+class Sphere{
 
     public : 
-        sphere(float radius,int nb_points,
+
+        Sphere(const Sphere&) = delete;
+        Sphere& operator=(const Sphere&) = delete;
+
+        Sphere(Sphere&& other) noexcept :
+        _points(std::move(other._points)), _R(other._R), _color(other._color), 
+        _center(other._center), _VBO(other._VBO), _VAO(other._VAO),
+        _model(other._model){
+            other._VBO = 0;
+            other._VAO = 0;
+        }
+        Sphere& operator=(Sphere&& other) noexcept {
+            if (this != &other) {
+                if(_VAO != 0) glDeleteVertexArrays(1, &_VAO);
+                if(_VBO != 0) glDeleteBuffers(1, &_VBO);
+            _points = std::move(other._points);
+            _R = other._R;
+            _color = other._color;
+            _center = other._center;
+            _VBO = other._VBO;
+            _VAO = other._VAO;
+            _model = other._model;
+
+            other._VBO = 0;
+            other._VAO = 0;
+            }
+        return *this;
+        }
+
+        Sphere(float radius,int nb_points,
                const std::vector<float>& color, const glm::vec3 center) :
-               _R(radius) , _color(color), _center(center), _points_arr(nullptr){
+               _R(radius) , _color(color), _center(center){
             
             if(nb_points < 64){
-                throw std::invalid_argument("Not enought points to correctly render a sphere");
+                throw std::invalid_argument("Not enought points to correctly render a Sphere");
             }
             int nb_lat = floor(sqrt(nb_points));
             int nb_long = nb_lat;
@@ -59,8 +88,7 @@ class sphere{
             _model = glm::translate(_model, _center);
         }
 
-        ~sphere(){
-            delete _points_arr;
+        ~Sphere(){
             glDeleteBuffers(1,&_VBO);
             glDeleteVertexArrays(1,&_VAO);
         }
@@ -90,7 +118,6 @@ class sphere{
         float _R;
         std::vector <float> _color;
         glm::vec3 _center;
-        float* _points_arr;
 
         unsigned int _VBO;
         unsigned int _VAO;
