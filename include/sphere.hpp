@@ -15,22 +15,24 @@
 class sphere{
 
     public : 
-        sphere(float radius,int nb_points, const std::vector<float>& color, const glm::vec3 center) : _R(radius) , _points(nullptr), _color(color), _center(center){
+        sphere(float radius,int nb_points,
+               const std::vector<float>& color, const glm::vec3 center) :
+               _R(radius) , _color(color), _center(center), _points_arr(nullptr){
             
             if(nb_points < 64){
                 throw std::invalid_argument("Not enought points to correctly render a sphere");
             }
             int nb_lat = floor(sqrt(nb_points));
             int nb_long = nb_lat;
-            _points = new float[nb_lat * nb_long * 6]; 
+            _points.resize(nb_lat * nb_long * 6);
 
             for (int i = 0 ; i < nb_lat; i++){
                 float lat = M_PI * (-0.5f + (float)i/(nb_lat - 1));
+                float y = _R * sin(lat);
                 for(int j = 0 ; j < nb_long ; j++){
                     float lon = 2.0f * M_PI * (float)j / nb_long;
                     
                     float x = _R * cos(lat) * cos(lon);
-                    float y = _R * sin(lat);
                     float z = _R * cos(lat) * sin(lon);
 
                     int base = (i * nb_long + j) * 6;
@@ -40,7 +42,6 @@ class sphere{
                     _points[base + 3] = _color[0];
                     _points[base + 4] = _color[1];
                     _points[base + 5] = _color[2];
-
                 }
             }
             
@@ -49,7 +50,7 @@ class sphere{
 
             glBindVertexArray(_VAO);
             glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-            glBufferData(GL_ARRAY_BUFFER, nb_points * 6 * sizeof(float) , _points, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, _points.size() * sizeof(float) , _points.data(), GL_STATIC_DRAW);
             glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)0);
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3 * sizeof(float)));
@@ -59,12 +60,12 @@ class sphere{
         }
 
         ~sphere(){
-            delete[] _points;
+            delete _points_arr;
             glDeleteBuffers(1,&_VBO);
             glDeleteVertexArrays(1,&_VAO);
         }
 
-        float* get_points() const {
+        std::vector<float> get_points() const {
             return _points;
         }
 
@@ -85,10 +86,11 @@ class sphere{
         }
 
     private:
-        float* _points;
+        std::vector<float> _points;
         float _R;
         std::vector <float> _color;
         glm::vec3 _center;
+        float* _points_arr;
 
         unsigned int _VBO;
         unsigned int _VAO;

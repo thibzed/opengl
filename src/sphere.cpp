@@ -155,36 +155,6 @@ int main(){
     glDeleteShader(fragmentShader);
     glDeleteShader(vertexShader);
 
-    //int nb_points = 80 * 80;
-    //glm::vec3 sphere_center1 = {0.0f, 0.0f, 0.0f};
-    //sphere S1(0.5f, nb_points, {1.0f,1.0f,1.0f}, sphere_center1);
-    //float* points1 = S1.get_points();
-//
-    //glm::vec3 sphere_center2 = {0.0f, 1.0f, 0.0f};
-    //sphere S2(0.5f, nb_points, {0.0f,1.0f,0.0f}, sphere_center2);
-    //float* points2 = S2.get_points();
-//
-    //unsigned int VBO[2],VAO[2];
-    //glGenVertexArrays(2,VAO);
-    //glGenBuffers(2,VBO);
-//
-    //glBindVertexArray(VAO[0]);
-    //glBindBuffer(GL_ARRAY_BUFFER,VBO[0]);
-    //glBufferData(GL_ARRAY_BUFFER, nb_points * 6 * sizeof(float), points1, GL_STATIC_DRAW);
-    //glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(float),(void*)0);
-    //glEnableVertexAttribArray(0);
-    //glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3*sizeof(float)));
-    //glEnableVertexAttribArray(1);
-//
-    //glBindVertexArray(VAO[1]);
-    //glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-    //glBufferData(GL_ARRAY_BUFFER, nb_points * 6 * sizeof(float), points2, GL_STATIC_DRAW);
-    //glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(float),(void*)0);
-    //glEnableVertexAttribArray(0);
-    //glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3*sizeof(float)));
-    //glEnableVertexAttribArray(1);
-//  
-
     std::mt19937 generator(std::random_device{}());
     std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
 

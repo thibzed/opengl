@@ -154,6 +154,7 @@ int main(){
         cube.get_shader().setVec3("light.position", cameraPos);
         cube.get_shader().setVec3("light.direction", cameraFront);
         cube.get_shader().setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
+        cube.get_shader().setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
         
         cubeContainer.push_back(std::move(cube));
     };
