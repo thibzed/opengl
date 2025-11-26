@@ -19,26 +19,6 @@ glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::vec3 lightPos(-0.2f, -1.0f, -0.3f);
 
-const char* sourceVertexShader = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    
-    "uniform mat4 model;\n"
-    "uniform mat4 view;\n"
-    "uniform mat4 projection;\n"
-    
-    "void main()\n"
-    "{\n"
-    	"gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-    "}\0";
-
-const char * sourceFragmentShader = "#version 330 core\n"
-    "out vec4 FragColor\n;"
-
-    "void main()\n"
-    "{\n"
-        "FragColor = vec4(1.0);\n" 
-    "}\0";
-
 void processInput(GLFWwindow *window){
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -165,8 +145,9 @@ int main(){
     for(unsigned int i = 0 ; i < 10 ; i++){
         Cube cube = Cube::withDualTexture(cubePositions[i], "../img/container2.png", "../img/container2_specular.png",
                                           "../shaders/cube_shader/texture_specular/cube_texture_specular.vs",
-                                          "../shaders/cube_shader/texture_specular/cube_texture_specular_directionnal.fs");
+                                          "../shaders/cube_shader/texture_specular/cube_texture_specular_point_light.fs");
         cube.set_rotation(20.0f * i, glm::vec3(1.0f, 0.3f, 0.5f));
+        cube.set_light_attenuation(1.0f, 0.09f, 0.032f);
         cubeContainer.push_back(std::move(cube));
     };
     

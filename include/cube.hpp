@@ -20,7 +20,6 @@ class Cube{
         Cube(const Cube&) = delete; //Désactive la copie.
         Cube& operator=(const Cube&) = delete; //Interdit l'affectation par copie.
 
-        
         Cube(Cube&& other) noexcept : //Constructeur de move std::move
         _cube_vertices(std::move(other._cube_vertices)), _VAO(other._VAO), _VBO(other._VBO), 
         _hasTexture(other._hasTexture), _hasDualTexture(other._hasDualTexture), 
@@ -117,6 +116,9 @@ class Cube{
             _shader.setVec3("light.diffuse", glm::vec3(0.5f));
             _shader.setVec3("light.specular", glm::vec3(1.0f));
             _shader.setFloat("material.shininess", 64.0f);
+            //_shader.setFloat("light.constant", 1.0f);
+            //_shader.setFloat("light.linear", 0.09f);
+            //_shader.setFloat("light.quadratic", 0.032f);
 
             if(_hasDualTexture){
                 _shader.setInt("material.diffuse", 0);
@@ -137,6 +139,13 @@ class Cube{
         }
         glBindVertexArray(_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+
+    void set_light_attenuation(float constant, float linear, float quadratic){
+        _shader.use();
+        _shader.setFloat("light.constant",constant);
+        _shader.setFloat("light.linear", linear);
+        _shader.setFloat("light.quadratic", quadratic);
     }
 
     static Cube withColor(glm::vec3 center, glm::vec3 color,
@@ -416,5 +425,4 @@ class Cube{
             stbi_image_free(data);
         }
 };
-//Still need to be update for specular and diffuse texture cube. 
 #endif
