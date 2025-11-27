@@ -204,6 +204,10 @@ class Sphere{
         unsigned int get_VAO() const {
             return _VAO;
         }
+        void set_model(glm::vec3 vec){
+            _model = glm::mat4(1.0f);
+            _model = glm::translate(_model, vec);
+        }
 
     private:
         std::vector<float> _points;
