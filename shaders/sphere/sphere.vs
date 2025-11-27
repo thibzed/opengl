@@ -8,8 +8,12 @@ uniform mat4 view;
 uniform mat4 projection;
 
 out vec4 vertexColor;
+out vec3 FragPos;
+out vec3 FragNormal;
 
 void main(){
-gl_Position = projection * view * model * vec4(Pos, 1.0f);
-vertexColor = vec4(Color,1.0f);
+    gl_Position = projection * view * model * vec4(Pos, 1.0f);
+    vertexColor = vec4(Color,1.0f);
+    FragPos = vec3(model * vec4(Pos, 1.0f));
+    FragNormal = Normal;
 };

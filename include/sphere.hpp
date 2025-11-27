@@ -95,9 +95,11 @@ class Sphere{
             _model = glm::translate(_model, _center);
         }
 
-        Sphere(float radius, const std::vector<float>& color, const glm::vec3 center) : 
+        Sphere(float radius, const std::vector<float>& color, glm::vec3 center,
+               const char* vertexShader = "../shaders/sphere/sphere.vs",
+               const char* fragmentShader = "../shaders/sphere/sphere.fs") : 
                _R(radius), _color(color), _center(center),
-               _shader("../shaders/sphere/sphere.vs", "../shaders/sphere/sphere.fs"){
+               _shader(vertexShader, fragmentShader){
                 //Part of code comes from https://www.songho.ca/opengl/gl_sphere.html#sphere
                 int subdivision = 80;
                 float dlat = M_PI / subdivision;
@@ -177,7 +179,7 @@ class Sphere{
 
         void render(glm::mat4 view, glm::mat4 projection){
             _shader.use();
-            _shader.setMat4("model", _model);
+            _shader.setMat4("model", get_model());
             _shader.setMat4("view",view);
             _shader.setMat4("projection", projection);
             glBindVertexArray(_VAO);
@@ -204,16 +206,41 @@ class Sphere{
         unsigned int get_VAO() const {
             return _VAO;
         }
-        void set_model(glm::vec3 vec){
-            _model = glm::mat4(1.0f);
-            _model = glm::translate(_model, vec);
+        void set_position(glm::vec3 newPos){
+            if(_center != newPos){
+            _center = newPos;
+            _modeldirty = true;
+            }
+        }
+        void set_rotation(float angle, glm::vec3 rotation_axis){
+            if (angle != _angle || rotation_axis != _rotation_axis){
+            _angle = angle;
+            _rotation_axis = rotation_axis;
+            _modeldirty = true;
+            }
+        }
+        void set_scale(glm::vec3 scale){
+            if(_scale != scale){
+                _scale = scale;
+                _modeldirty = true;
+            }
+        }
+        glm::mat4 get_model() {
+            if (_modeldirty){
+                updateModel();
+                _modeldirty = false;
+            }
+            return _model;
+        }
+        Shader& get_shader(){
+            return _shader;
         }
 
     private:
         std::vector<float> _points;
         float _R;
         std::vector <float> _color;
-        glm::vec3 _center;
+        glm::vec3 _center = glm::vec3 (0.0f);
         std::vector <unsigned int> _indices;
         std::vector <int> _lineIndices;
         unsigned int _VBO;
@@ -221,6 +248,18 @@ class Sphere{
         unsigned int _EBO;
         Shader _shader;
         glm::mat4 _model = glm::mat4 (1.0f);
+        glm::vec3 _scale = glm::vec3 (1.0f);
+        float _angle = 0.0f;
+        glm::vec3 _rotation_axis = glm::vec3(0.0f, 1.0f, 0.0f);
+
+        bool _modeldirty = true;
+
+        void updateModel(){
+            _model = glm::mat4(1.0f);
+            _model = glm::translate(_model, _center);
+            _model = glm::rotate(_model, glm::radians(_angle), _rotation_axis);
+            _model = glm::scale(_model, _scale);
+        }
 };
 
 #endif

@@ -7,10 +7,10 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "sphere.hpp"
-
+#include "planet.hpp"
 
 const int WIDTH = 800;
-const int HEIGHT = 600;
+const int HEIGHT = 800;
 
 float lastX = (float)WIDTH / 2.0f;
 float lastY = (float)HEIGHT / 2.0f;
@@ -91,9 +91,10 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
 }
 
 const float PHYSICS_DT = 6 * 3600.0f;
-const float TIME_MULTIPLIER = 1000000.0f;
+const float TIME_MULTIPLIER = 500000.0f;
 float physicsAccumulator = 0.0f;
 const float SCALE = 0.75f;
+float timeAccumulator = 0.0f;
 
 std::vector<float> S_pos;
 std::vector<float> r;
@@ -166,11 +167,37 @@ int main(){
     }    
 
     setup_init_condition();
-    glm::vec3 center_T (r[0] / 1.496e11f, r[1] / 1.496e11f, 0.0f);
+    glm::vec3 pos_T (r[0] / 1.496e11f, r[1] / 1.496e11f, 0.0f);
     glm::vec3 center_S (0.0f);
 
-    Sphere S(0.25, {1.000, 0.647, 0.000}, center_S);
-    Sphere T(0.0625, {0.541, 0.169, 0.886}, center_T);
+    //Sphere S(0.25, {1.000, 0.647, 0.000}, center_S);
+    //Sphere T(0.0625, {0.0f, 0.0f, 0.886}, pos_T, "../shaders/sphere/sphere.vs", "../shaders/sphere/sphere_directionnal.fs");
+
+
+    Planet S({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.25, dt, {1.000, 0.647, 0.000});
+    Planet T({1.496e11f, 0.0f, 0.0f}, {0.0f , 29780.0f, 0.0f}, 0.0625, dt, {0.0f, 0.0f, 0.886}, "../shaders/sphere/sphere.vs", "../shaders/sphere/sphere_directionnal.fs");
+    T.get_sphere().get_shader().use();
+    T.get_sphere().get_shader().setVec3("light.position",center_S);
+    T.get_sphere().get_shader().setVec3("light.ambient",glm::vec3(0.2f));
+    T.get_sphere().get_shader().setVec3("light.diffuse", glm::vec3(1.0f,1.0f,0.95f));
+    T.get_sphere().get_shader().setVec3("light.specular",glm::vec3(1.0f, 1.0f, 1.0f));
+    T.get_sphere().get_shader().setFloat("light.constant",1.0f);
+    T.get_sphere().get_shader().setFloat("light.linear",0.5f);
+    T.get_sphere().get_shader().setFloat("light.quadratic",0.25f);
+    T.get_sphere().get_shader().setFloat("specularStrenght", 0.2);
+    T.get_sphere().get_shader().setFloat("shininess",32.0f);
+
+    Planet M({2.279e11f, 0.0f, 0.0f}, {0.0f , 24080.0f, 0.0f}, 0.0625, dt, {0.7f, 0.35f, 0.2f}, "../shaders/sphere/sphere.vs", "../shaders/sphere/sphere_directionnal.fs");
+    M.get_sphere().get_shader().use();
+    M.get_sphere().get_shader().setVec3("light.position",center_S);
+    M.get_sphere().get_shader().setVec3("light.ambient",glm::vec3(0.2f));
+    M.get_sphere().get_shader().setVec3("light.diffuse", glm::vec3(1.0f,1.0f,0.95f));
+    M.get_sphere().get_shader().setVec3("light.specular",glm::vec3(1.0f, 1.0f, 1.0f));
+    M.get_sphere().get_shader().setFloat("light.constant",1.0f);
+    M.get_sphere().get_shader().setFloat("light.linear",0.5f);
+    M.get_sphere().get_shader().setFloat("light.quadratic",0.25f);
+    M.get_sphere().get_shader().setFloat("specularStrenght", 0.05);
+    M.get_sphere().get_shader().setFloat("shininess",8.0f);
 
     while(!glfwWindowShouldClose(window)){
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -181,16 +208,23 @@ int main(){
         glfwSetScrollCallback(window, scroll_callback);
 
         processInput(window);
+        glm::vec3 pos_T;
+        glm::vec3 pos_M;
 
-        //physicsAccumulator += deltaTime * TIME_MULTIPLIER;
-        //while(physicsAccumulator >=PHYSICS_DT){
-        //    next_step();
-        //    physicsAccumulator -= PHYSICS_DT;
-        //}
-        next_step();
-        glm::vec3 center_T (SCALE * (r[0] / 1.496e11f), SCALE * (r[1] / 1.496e11f), 0.0f);
-        T.set_model(center_T);
+        physicsAccumulator += deltaTime * TIME_MULTIPLIER;
+        while(physicsAccumulator >= PHYSICS_DT){
+            T.compute_step();
+            M.compute_step();
+            pos_T = glm::make_vec3(T.get_pos().data());
+            pos_M = glm::make_vec3(M.get_pos().data());
+            pos_T = {SCALE * (pos_T[0] / 1.496e11f), SCALE * (pos_T[1] / 1.496e11f), 0.0f};
+            pos_M = {SCALE * (pos_M[0] / 1.496e11f), SCALE * (pos_M[1] / 1.496e11f), 0.0f};
+            physicsAccumulator -= PHYSICS_DT;
+        }
         
+        T.get_sphere().get_shader().setVec3("light.direction", pos_T - center_S);
+        M.get_sphere().get_shader().setVec3("light.direction", pos_M - center_S);
+
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
@@ -198,8 +232,11 @@ int main(){
         glm::mat4 projection = glm::perspective(glm::radians(fov) , (float)WIDTH / (float)HEIGHT,0.1f,100.0f);
         glm::mat4 view = glm::lookAt(cameraPos , cameraPos + cameraFront, cameraUp);
 
-        S.render(view, projection);
-        T.render(view, projection);
+        T.get_sphere().set_position(pos_T);
+        M.get_sphere().set_position(pos_M);
+        S.get_sphere().render(view, projection);
+        T.get_sphere().render(view, projection);
+        M.get_sphere().render(view, projection);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
