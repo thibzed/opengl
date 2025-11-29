@@ -175,6 +175,7 @@ class Sphere{
         ~Sphere(){
             glDeleteBuffers(1,&_VBO);
             glDeleteVertexArrays(1,&_VAO);
+            glDeleteBuffers(1,&_EBO);
         }
 
         void render(glm::mat4 view, glm::mat4 projection){

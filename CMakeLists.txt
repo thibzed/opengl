@@ -169,7 +169,7 @@ add_custom_target(run_${TEMPLATE_NAME}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-set(TEMPLATE_NAME "two_body_simulation")
+set(TEMPLATE_NAME "solar_system")
 
 add_executable(${TEMPLATE_NAME}
     src/glad.c
