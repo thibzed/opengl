@@ -90,7 +90,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
     }
 }
 
-const float PHYSICS_DT = 6 * 3600.0f;
+//const float PHYSICS_DT =  dt;
 const float TIME_MULTIPLIER = 500000.0f;
 float physicsAccumulator = 0.0f;
 float timeAccumulator = 0.0f;
@@ -121,25 +121,30 @@ int main(){
     float R_Mars = 3389.5f;
     float R_Venus = 6051.8f;
     float R_Mercury = 2439.7f;
+    float R_Moon = 1737.4f;
 
     float R_Earth_scale = R_Earth / 63710.0f; //R_T is divided by 10. 
     float R_Mars_scale = R_Mars / 63710.0f; //All other radius are scaled in comparaison with Earth radius
     float R_Venus_scale = R_Venus / 63710.0f;
     float R_Mercury_scale = R_Mercury / 63710.0f;
+    float R_Moon_scale = R_Moon / 63710.0f;
 
-    Planet Sun({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.25, {1.000, 0.647, 0.000}, false);
+    Planet Sun({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.25, {1.0f, 0.647f, 0.0f}, false);
     Planet Earth({1.496e11f, 0.0f, 0.0f}, {0.0f , 29780.0f, 0.0f}, R_Earth_scale, 
-             {0.0f, 0.0f, 0.886}, true, 
+             {0.0f, 0.0f, 0.886}, true, 24 * 3600.0f , 
              "../shaders/sphere/sphere.vs", "../shaders/sphere/sphere_directionnal.fs");
     Planet Mars({2.279e11f, 0.0f, 0.0f}, {0.0f , 24080.0f, 0.0f}, R_Mars_scale, 
-             {0.7f, 0.35f, 0.2f}, true, 
+             {0.7f, 0.35f, 0.2f}, true, 24 * 3600.0f , 
              "../shaders/sphere/sphere.vs", "../shaders/sphere/sphere_directionnal.fs");
     Planet Venus({1.08e11f, 0.0f, 0.0f}, {0.0f, 35025.0f, 0.0f}, R_Venus_scale, 
-             {0.94f, 0.89f, 0.78f}, true, 
+             {0.94f, 0.89f, 0.78f}, true, 24 * 3600.0f , 
              "../shaders/sphere/sphere.vs", "../shaders/sphere/sphere_directionnal.fs");
     Planet Mercury({5.80e10f, 0.0f, 0.0f}, {0.0f, 47360.0f, 0.0f}, R_Mercury_scale, 
-             {0.5f, 0.5f, 0.5f}, true, 
+             {0.5f, 0.5f, 0.5f}, true, 24 * 3600.0f , 
              "../shaders/sphere/sphere.vs", "../shaders/sphere/sphere_directionnal.fs");
+    //Planet Moon({1e11f, 0.0f, 0.0f}, {0.0f, 1620.0f, 0.0f}, R_Moon_scale, 
+    //            {0.5f, 0.5f, 0.5f}, true, 24 * 3600.0f , 
+    //            "../shaders/sphere/sphere.vs", "../shaders/sphere/sphere_directionnal.fs");
 
     Earth.get_sphere().get_shader().use();
     Earth.get_sphere().get_shader().setVec3("light.position",center_S);
@@ -185,6 +190,17 @@ int main(){
     Mercury.get_sphere().get_shader().setFloat("specularStrenght", 0.05);
     Mercury.get_sphere().get_shader().setFloat("shininess",1.0f);
 
+    //Moon.get_sphere().get_shader().use();
+    //Moon.get_sphere().get_shader().setVec3("light.position",center_S);
+    //Moon.get_sphere().get_shader().setVec3("light.ambient",glm::vec3(0.2f));
+    //Moon.get_sphere().get_shader().setVec3("light.diffuse", glm::vec3(1.0f,1.0f,0.95f));
+    //Moon.get_sphere().get_shader().setVec3("light.specular",glm::vec3(1.0f, 1.0f, 1.0f));
+    //Moon.get_sphere().get_shader().setFloat("light.constant",1.0f);
+    //Moon.get_sphere().get_shader().setFloat("light.linear",0.5f);
+    //Moon.get_sphere().get_shader().setFloat("light.quadratic",0.25f);
+    //Moon.get_sphere().get_shader().setFloat("specularStrenght", 0.05);
+    //Moon.get_sphere().get_shader().setFloat("shininess",1.0f);
+
 
     while(!glfwWindowShouldClose(window)){
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -199,28 +215,33 @@ int main(){
         glm::vec3 pos_Mars;
         glm::vec3 pos_Venus;
         glm::vec3 pos_Mercury;
+        glm::vec3 pos_Moon;
 
         physicsAccumulator += deltaTime * TIME_MULTIPLIER;
-        while(physicsAccumulator >= PHYSICS_DT){
+        while(physicsAccumulator >= dt){
             Earth.compute_step();
             Mars.compute_step();
             Venus.compute_step();
             Mercury.compute_step();
+            //Moon.compute_step();
             pos_Earth = glm::make_vec3(Earth.get_pos().data());
             pos_Mars = glm::make_vec3(Mars.get_pos().data());
             pos_Venus = glm::make_vec3(Venus.get_pos().data());
             pos_Mercury = glm::make_vec3(Mercury.get_pos().data());
+            //pos_Moon = glm::make_vec3(Moon.get_pos().data());
             pos_Earth = {SCALE * (pos_Earth[0] / AU), SCALE * (pos_Earth[1] / AU), 0.0f};
             pos_Mars = {SCALE * (pos_Mars[0] / AU), SCALE * (pos_Mars[1] / AU), 0.0f};
             pos_Venus = {SCALE * (pos_Venus[0] / AU), SCALE * (pos_Venus[1] / AU), 0.0f};
             pos_Mercury = {SCALE * (pos_Mercury[0] / AU), SCALE * (pos_Mercury[1] / AU), 0.0f};
-            physicsAccumulator -= PHYSICS_DT;
+            //pos_Moon = {SCALE * (pos_Moon[0] / AU), SCALE * (pos_Moon[1] / AU), 0.0f};
+            physicsAccumulator -= dt;
         }
         
-        Earth.get_sphere().get_shader().setVec3("light.direction", pos_Earth - center_S);
-        Mars.get_sphere().get_shader().setVec3("light.direction", pos_Mars - center_S);
-        Venus.get_sphere().get_shader().setVec3("light.direction", pos_Venus - center_S);
-        Mercury.get_sphere().get_shader().setVec3("light.direction", pos_Mercury - center_S);
+        Earth.get_sphere().get_shader().setVec3("light.position", center_S);
+        Mars.get_sphere().get_shader().setVec3("light.position",center_S);
+        Venus.get_sphere().get_shader().setVec3("light.position", center_S);
+        Mercury.get_sphere().get_shader().setVec3("light.position", center_S);
+        //Moon.get_sphere().get_shader().setVec3("light.position", center_S);
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -243,6 +264,9 @@ int main(){
         Mars.render_orbit(view, projection);
         Venus.render_orbit(view, projection);
         Mercury.render_orbit(view, projection);
+        Sun.render(view, projection, center_S);
+        Earth.render(view, projection, pos_Earth);
+        //Moon.render(view, projection, pos_Moon);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

@@ -188,3 +188,23 @@ add_custom_target(run_${TEMPLATE_NAME}
     DEPENDS ${TEMPLATE_NAME}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+set(TEMPLATE_NAME "orbital_system")
+
+add_executable(${TEMPLATE_NAME}
+    src/glad.c
+    src/${TEMPLATE_NAME}.cpp
+)
+
+target_link_libraries(${TEMPLATE_NAME} ${OPENGL_LIBS})
+
+set_target_properties(${TEMPLATE_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+)
+
+add_custom_target(run_${TEMPLATE_NAME}
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_SOURCE_DIR}/bin/${TEMPLATE_NAME}.exe
+    DEPENDS ${TEMPLATE_NAME}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
