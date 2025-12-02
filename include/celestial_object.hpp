@@ -28,9 +28,8 @@ class CelestialObject{
             float rx = 2 * _r[0] - _r_prev[0] + dt * dt * _total_force[0];
             float ry = 2 * _r[1] - _r_prev[1] + dt * dt * _total_force[1];
             float rz = 2 * _r[2] - _r_prev[2] + dt * dt * _total_force[2];
-            std::cout << "rx : " << rx << "ry : " << ry  << "rz : " << rz << std::endl;
-            _r = {rx, ry, rz};
             _r_prev = _r;
+            _r = {rx, ry, rz};
             _a = _total_force;
         }
         //std::vector<float> compute_acceleration(){
@@ -48,10 +47,11 @@ class CelestialObject{
             float dx = orbiter_pos[0] - _r[0];
             float dy = orbiter_pos[1] - _r[1];
             float dz = orbiter_pos[2] - _r[2];
-            
+
             float norm = sqrt(dx * dx + dy * dy + dz * dz);
-            float inv = 1.0f / (norm * norm * norm);
+            double inv = 1.0f / (norm * norm * norm);
             float force_magnitude = G * orbiter->get_mass() * inv;
+
             return {force_magnitude * dx, force_magnitude * dy, force_magnitude * dz}; 
         }
         void add_force(const std::vector<float>& force){
@@ -77,6 +77,9 @@ class CelestialObject{
         }
         float get_mass(){
             return _m;
+        }
+        Sphere& get_sphere(){
+            return _sphere;
         }
 
     private:
@@ -119,6 +122,8 @@ class OrbitalSystem {
         void initialize(){
             for (auto& orbiter: _orbiters){
                 orbiter->reset_forces();
+                std::vector<float> force_center_orbiter = orbiter->compute_force_from(_center);
+                orbiter->add_force(force_center_orbiter);
                 orbiter->setup_verlet();
             }
         }
@@ -142,7 +147,6 @@ class OrbitalSystem {
                 _center->integrate();
             }
             for (auto& orbiter : _orbiters){
-                std::cout << orbiter << "integrate" << std::endl;
                 orbiter->integrate();
             }
         }

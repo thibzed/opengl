@@ -115,15 +115,44 @@ int main(){
     return -1;
     }    
 
+    glm::vec3 sunCenter(0.0f);
     CelestialObject Sun({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.25, 
                          2e30f ,{1.000, 0.647, 0.000}, false);
     CelestialObject Earth({1.496e11f, 0.0f, 0.0f}, {0.0f , 29780.0f, 0.0f}, 0.1, 
                           6e24f, {0.0f, 0.0f, 0.886}, false, 24 * 3600.0f, 
                           "../shaders/sphere/sphere.vs", "../shaders/sphere/sphere_directionnal.fs");
+    CelestialObject Mars({2.279e11f, 0.0f, 0.0f}, {0.0f , 24080.0f, 0.0f}, 0.1, 
+                          6.4e24f, {0.7f, 0.35f, 0.2f}, false, 24 * 3600.0f ,
+                          "../shaders/sphere/sphere.vs", "../shaders/sphere/sphere_directionnal.fs");    
+
+    Earth.get_sphere().get_shader().use();
+    Earth.get_sphere().get_shader().setVec3("light.position",sunCenter);
+    Earth.get_sphere().get_shader().setVec3("light.ambient",glm::vec3(0.2f));
+    Earth.get_sphere().get_shader().setVec3("light.diffuse", glm::vec3(1.0f,1.0f,0.95f));
+    Earth.get_sphere().get_shader().setVec3("light.specular",glm::vec3(1.0f, 1.0f, 1.0f));
+    Earth.get_sphere().get_shader().setFloat("light.constant",1.0f);
+    Earth.get_sphere().get_shader().setFloat("light.linear",0.5f);
+    Earth.get_sphere().get_shader().setFloat("light.quadratic",0.25f);
+    Earth.get_sphere().get_shader().setFloat("specularStrenght", 0.2);
+    Earth.get_sphere().get_shader().setFloat("shininess",32.0f);
+
+    Mars.get_sphere().get_shader().use();
+    Mars.get_sphere().get_shader().setVec3("light.position",sunCenter);
+    Mars.get_sphere().get_shader().setVec3("light.ambient",glm::vec3(0.2f));
+    Mars.get_sphere().get_shader().setVec3("light.diffuse", glm::vec3(1.0f,1.0f,0.95f));
+    Mars.get_sphere().get_shader().setVec3("light.specular",glm::vec3(1.0f, 1.0f, 1.0f));
+    Mars.get_sphere().get_shader().setFloat("light.constant",1.0f);
+    Mars.get_sphere().get_shader().setFloat("light.linear",0.5f);
+    Mars.get_sphere().get_shader().setFloat("light.quadratic",0.25f);
+    Mars.get_sphere().get_shader().setFloat("specularStrenght", 0.05);
+    Mars.get_sphere().get_shader().setFloat("shininess",8.0f);
+
 
     OrbitalSystem solarSystem(&Sun);
     solarSystem.fix_center(true);
     solarSystem.add_orbiters(&Earth);
+    solarSystem.add_orbiters(&Mars);
+    solarSystem.initialize();
 
     while(!glfwWindowShouldClose(window)){
         float currentFrame = static_cast<float>(glfwGetTime());
