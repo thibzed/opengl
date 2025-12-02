@@ -19,18 +19,18 @@ class CelestialObject{
                          const std::vector<float>& color, bool compute_orbit = false, float T_revolution = 24 * 3600.0f,
                          const char* vertexShader = "../shaders/sphere/sphere.vs",
                          const char * fragmentShader = "../shaders/sphere/sphere.fs") : 
-        _r(r0), _r_prev(r0), _v(v0), _a({0.0f, 0.0f, 0.0f}), _total_force({0.0f, 0.0f, 0.0f}),
+        _r(r0), _r_prev(r0), _v(v0), _a({0.0f, 0.0f, 0.0f}), _total_acceleration({0.0f, 0.0f, 0.0f}),
         _m(mass), _radius(radius), _orbitFlag(compute_orbit), _T_revolution(T_revolution),
         _sphere(radius, color,glm::make_vec3(r0.data()), vertexShader, fragmentShader),
         _orbitShader("../shaders/orbit/orbit.vs", "../shaders/orbit/orbit.fs") {}
         void integrate(){
             //Verlet integration
-            float rx = 2 * _r[0] - _r_prev[0] + dt * dt * _total_force[0];
-            float ry = 2 * _r[1] - _r_prev[1] + dt * dt * _total_force[1];
-            float rz = 2 * _r[2] - _r_prev[2] + dt * dt * _total_force[2];
+            float rx = 2 * _r[0] - _r_prev[0] + dt * dt * _total_acceleration[0];
+            float ry = 2 * _r[1] - _r_prev[1] + dt * dt * _total_acceleration[1];
+            float rz = 2 * _r[2] - _r_prev[2] + dt * dt * _total_acceleration[2];
             _r_prev = _r;
             _r = {rx, ry, rz};
-            _a = _total_force;
+            _a = _total_acceleration;
         }
         //std::vector<float> compute_acceleration(){
         //    float ax, ay, az;
@@ -42,7 +42,7 @@ class CelestialObject{
         //    }
         //    return {ax, ay, az};
         //}
-        std::vector<float> compute_force_from(CelestialObject* orbiter){
+        std::vector<float> compute_acceleration_from(CelestialObject* orbiter){
             std::vector<float> orbiter_pos = orbiter->get_pos();
             float dx = orbiter_pos[0] - _r[0];
             float dy = orbiter_pos[1] - _r[1];
@@ -50,17 +50,17 @@ class CelestialObject{
 
             float norm = sqrt(dx * dx + dy * dy + dz * dz);
             double inv = 1.0f / (norm * norm * norm);
-            float force_magnitude = G * orbiter->get_mass() * inv;
+            float acceleration_magnitude = G * orbiter->get_mass() * inv;
 
-            return {force_magnitude * dx, force_magnitude * dy, force_magnitude * dz}; 
+            return {acceleration_magnitude * dx, acceleration_magnitude * dy, acceleration_magnitude * dz}; 
         }
-        void add_force(const std::vector<float>& force){
-            _total_force[0] += force[0];
-            _total_force[1] += force[1];
-            _total_force[2] += force[2];
+        void add_acceleration(const std::vector<float>& acceleration){
+            _total_acceleration[0] += acceleration[0];
+            _total_acceleration[1] += acceleration[1];
+            _total_acceleration[2] += acceleration[2];
         }
-        void reset_forces(){
-            _total_force = {0.0f, 0.0f, 0.0f};
+        void reset_acceleration(){
+            _total_acceleration = {0.0f, 0.0f, 0.0f};
         }
         void render(glm::mat4 view, glm::mat4 projection){
             glm::vec3 scaled_pos = {SCALE * _r[0] / AU, SCALE * _r[1] / AU, SCALE * _r[2] / AU};
@@ -68,9 +68,9 @@ class CelestialObject{
             _sphere.render(view, projection);
         }
         void setup_verlet(){
-            _r_prev[0] = _r[0] - _v[0] * dt + 0.5f * dt * dt * _total_force[0];
-            _r_prev[1] = _r[1] - _v[1] * dt + 0.5f * dt * dt * _total_force[1];
-            _r_prev[2] = _r[2] - _v[2] * dt + 0.5f * dt * dt * _total_force[2];
+            _r_prev[0] = _r[0] - _v[0] * dt + 0.5f * dt * dt * _total_acceleration[0];
+            _r_prev[1] = _r[1] - _v[1] * dt + 0.5f * dt * dt * _total_acceleration[1];
+            _r_prev[2] = _r[2] - _v[2] * dt + 0.5f * dt * dt * _total_acceleration[2];
         }
         std::vector<float> get_pos(){
             return _r;
@@ -99,7 +99,7 @@ class CelestialObject{
         std::vector<float> _r;
         std::vector<float> _v;
         std::vector<float> _a;
-        std::vector<float> _total_force;
+        std::vector<float> _total_acceleration;
 
         unsigned int _orbitVAO;
         unsigned int _orbitVBO;
@@ -121,9 +121,9 @@ class OrbitalSystem {
         }
         void initialize(){
             for (auto& orbiter: _orbiters){
-                orbiter->reset_forces();
-                std::vector<float> force_center_orbiter = orbiter->compute_force_from(_center);
-                orbiter->add_force(force_center_orbiter);
+                orbiter->reset_acceleration();
+                std::vector<float> acceleration_center_orbiter = orbiter->compute_acceleration_from(_center);
+                orbiter->add_acceleration(acceleration_center_orbiter);
                 orbiter->setup_verlet();
             }
         }
@@ -134,12 +134,22 @@ class OrbitalSystem {
                 orbiter->render(view, projection);
             }
         }
-        void compute_all_forces(){
-            if (_center){_center->reset_forces();}
-            for (auto& orbiter: _orbiters){orbiter->reset_forces();}
+        void compute_all_accelerations(){
+            if (_center){_center->reset_acceleration();}
+            for (auto& orbiter: _orbiters){orbiter->reset_acceleration();}
             for (auto& orbiter: _orbiters){
-                std::vector<float> force_center_orbiter = orbiter->compute_force_from(_center);
-                orbiter->add_force(force_center_orbiter);
+                //Force from sun on all orbiters
+                std::vector<float> acceleration_center_orbiter = orbiter->compute_acceleration_from(_center);
+                orbiter->add_acceleration(acceleration_center_orbiter);
+            }
+            for (int i = 0; i < _orbiters.size(); i++){
+                float mass_i = _orbiters[i]->get_mass();
+                for(int j = i + 1; j < _orbiters.size(); j++){ //Start at j+1 not to compute twice the same forces since we use third law of Newton. 
+                    std::vector<float> acceleration_ji = _orbiters[i]->compute_acceleration_from(_orbiters[j]); //Let say J = Mars, I = earth force_ji = force applied by Mars on Earth.
+                    _orbiters[i]->add_acceleration(acceleration_ji);
+                    std::vector<float> acceleration_ij = _orbiters[j]->compute_acceleration_from(_orbiters[i]);
+                    _orbiters[j]->add_acceleration(acceleration_ij);
+                }
             }
         }
         void integrate(){
@@ -151,7 +161,7 @@ class OrbitalSystem {
             }
         }
         void step(){
-            compute_all_forces();
+            compute_all_accelerations();
             integrate();
         }
         void fix_center(bool fixed){
