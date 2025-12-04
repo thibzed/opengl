@@ -1,7 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include "main.h"
 #include <cmath>
 
 #define STB_IMAGE_IMPLEMENTATION

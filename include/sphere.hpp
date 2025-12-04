@@ -53,7 +53,7 @@ class Sphere{
         Sphere(float radius,int nb_points,
                const std::vector<float>& color, const glm::vec3 center) :
                _R(radius) , _color(color), _center(center),
-               _shader("../shaders/sphere/sphere.vs", "../shaders/sphere/sphere.fs"){
+               _shader("shaders/sphere/sphere.vs", "shaders/sphere/sphere.fs"){
             
             if(nb_points < 64){
                 throw std::invalid_argument("Not enought points to correctly render a Sphere");

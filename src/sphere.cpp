@@ -1,6 +1,5 @@
 #include "Sphere.hpp" //Must be before GLFW include because Sphere.hpp holds the include for glad. 
 #include <GLFW/glfw3.h>
-#include "main.h"
 #define _USE_MATH_DEFINES
 
 #include <chrono>

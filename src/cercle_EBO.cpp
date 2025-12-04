@@ -1,7 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include "main.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <vector>

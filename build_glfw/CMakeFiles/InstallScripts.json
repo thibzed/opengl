@@ -1,0 +1,11 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/thiba/OneDrive/Bureau/Projet_perso/cpp/build_glfw/cmake_install.cmake",
+		"C:/Users/thiba/OneDrive/Bureau/Projet_perso/cpp/build_glfw/src/cmake_install.cmake",
+		"C:/Users/thiba/OneDrive/Bureau/Projet_perso/cpp/build_glfw/examples/cmake_install.cmake",
+		"C:/Users/thiba/OneDrive/Bureau/Projet_perso/cpp/build_glfw/tests/cmake_install.cmake",
+		"C:/Users/thiba/OneDrive/Bureau/Projet_perso/cpp/build_glfw/docs/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

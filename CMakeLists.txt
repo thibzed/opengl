@@ -5,7 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(include)
+#include_directories(C:/Users/thiba/OneDrive/Bureau/Projet_perso/cpp/assimp/include)
 link_directories(lib)
+#link_directories(C:/Users/thiba/OneDrive/Bureau/Projet_perso/cpp/assimp/lib)
 
 set(OPENGL_LIBS
     glfw3
@@ -200,6 +202,37 @@ target_link_libraries(${TEMPLATE_NAME} ${OPENGL_LIBS})
 
 set_target_properties(${TEMPLATE_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+)
+
+add_custom_target(run_${TEMPLATE_NAME}
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_SOURCE_DIR}/bin/${TEMPLATE_NAME}.exe
+    DEPENDS ${TEMPLATE_NAME}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+
+set(TEMPLATE_NAME "model")
+
+add_executable(${TEMPLATE_NAME}
+    src/glad.c
+    src/${TEMPLATE_NAME}.cpp
+)
+
+target_link_libraries(${TEMPLATE_NAME}
+                 ${OPENGL_LIBS}
+                 assimp
+)
+
+set_target_properties(${TEMPLATE_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+)
+
+add_custom_command(TARGET ${TEMPLATE_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/lib/libassimp-6.dll"
+        "${CMAKE_SOURCE_DIR}/bin/libassimp-6.dll"
+    COMMENT "Copie de libassimp-6.dll vers bin/"
 )
 
 add_custom_target(run_${TEMPLATE_NAME}
