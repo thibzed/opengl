@@ -7,7 +7,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <vector>
-#include "sphere.hpp"
+#include <map>
+#include "cube.hpp" 
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -26,6 +27,7 @@ float lastFrame = 0.0f;
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 lightPos = {0.0f, 2.0f, 1.5f};
 
 void processInput(GLFWwindow *window){
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -90,14 +92,14 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
     }
 }
 
-
-
 int main(){
+
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    stbi_set_flip_vertically_on_load(true);
 
     GLFWwindow* window = glfwCreateWindow(WIDTH,HEIGHT, "Test", NULL, NULL);
     if(window == NULL){
@@ -114,6 +116,51 @@ int main(){
     return -1;
     }    
 
+    std::vector<glm::vec3> vegetation;
+    vegetation.push_back(glm::vec3(-1.5f,  0.0f, -0.48f));
+    vegetation.push_back(glm::vec3( 1.5f,  0.0f,  0.51f));
+    vegetation.push_back(glm::vec3( 0.0f,  0.0f,  0.7f));
+    vegetation.push_back(glm::vec3(-0.3f,  0.0f, -2.3f));
+    vegetation.push_back(glm::vec3( 0.5f,  0.0f, -0.6f));  
+    std::vector<Cube> grassCubes;
+
+    std::vector<glm::vec3> windows;
+    windows.push_back(glm::vec3(-1.5f,  0.0f, -0.48f));
+    windows.push_back(glm::vec3( 1.5f,  0.0f,  0.51f));
+    windows.push_back(glm::vec3( 0.0f,  0.0f,  0.7f));
+    windows.push_back(glm::vec3(-0.3f,  0.0f, -2.3f));
+    windows.push_back(glm::vec3( 0.5f,  0.0f, -0.6f));  
+    std::vector<Cube> windowCubes;
+
+    //int width, height, nrChannels;
+    //unsigned char* data = stbi_load("../img/grass.png", &width, &height, &nrChannels, 0);
+    //if (data){
+    //    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    //}
+
+    for (GLuint i = 0 ; i < vegetation.size() ; i++){
+        Cube c = Cube::withTexture(vegetation[i], "../img/grass.png",
+                                   "../shaders/blending_shader/blending.vs",
+                                   "../shaders/blending_shader/blending.fs");
+        grassCubes.push_back(std::move(c));
+    }
+    for(GLuint i = 0 ; i < windows.size() ; i++){
+        Cube c = Cube::withTexture(windows[i], "../img/blending_transparent_window.png",
+                                    "../shaders/blending_shader/blending.vs",
+                                    "../shaders/blending_shader/blending_windows.fs");
+                                    windowCubes.push_back(std::move(c));
+    }
+
+    Cube light_cube = Cube::withColor(lightPos, {1.0f, 1.0f, 1.0f});
+    light_cube.set_scale({0.2f, 0.2f, 0.2f});
+    grassCubes.push_back(std::move(light_cube));
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glm::mat4 model = glm::mat4(1.0f);
+
     while(!glfwWindowShouldClose(window)){
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
@@ -124,13 +171,25 @@ int main(){
 
         processInput(window);
 
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         glm::mat4 projection = glm::perspective(glm::radians(fov) , (float)WIDTH / (float)HEIGHT,0.1f,100.0f);
         glm::mat4 view = glm::lookAt(cameraPos , cameraPos + cameraFront, cameraUp);
 
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
-
+        for (GLuint i = 0; i < grassCubes.size(); i++){
+            grassCubes[i].render(view, projection, lightPos, cameraPos, cameraFront);
+        }
+        std::map<float, glm::vec3> sorted;
+        for (GLuint i = 0; i < windowCubes.size(); i++){
+            float distance = glm::length(cameraPos - windows[i]);
+            sorted[distance] = windows[i];
+        }
+        int i = 0;
+        for(std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it){
+            windowCubes[i].set_position(it->second);
+            windowCubes[i++].render(view, projection, lightPos, cameraPos, cameraFront);
+        }
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

@@ -83,7 +83,7 @@ class Shader{
             glGetShaderiv(fragment,GL_COMPILE_STATUS,&success);
             if(!success){
                 glGetShaderInfoLog(fragment,512,NULL,infolog);
-                std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infolog << std::endl;
+                std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infolog << std::endl;
             }
 
             ID = glCreateProgram();
