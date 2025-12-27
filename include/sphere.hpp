@@ -20,7 +20,7 @@ class Sphere{
         Sphere(const Sphere&) = delete;
         Sphere& operator=(const Sphere&) = delete;
 
-        Sphere(Sphere&& other) noexcept : //move constructeur
+        Sphere(Sphere&& other) noexcept : //move constructor
         _points(std::move(other._points)), _R(other._R), _color(other._color), 
         _center(other._center), _VBO(other._VBO), _VAO(other._VAO),
         _model(other._model), _shader(std::move(other._shader)), _EBO(other._EBO){

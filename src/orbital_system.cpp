@@ -6,10 +6,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include "celestial_object.hpp"
 
-const int WIDTH = 800;
-const int HEIGHT = 600;
+const int WIDTH = 1600;
+const int HEIGHT = 1200;
 
 float lastX = (float)WIDTH / 2.0f;
 float lastY = (float)HEIGHT / 2.0f;
@@ -89,11 +92,17 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
     }
 }
 
-const float TIME_MULTIPLIER = 500000.0f;
+const float TIME_MULTIPLIER = 1000000.0f;
 float physicsAccumulator = 0.0f;
-float timeAccumulator = 0.0f;
+float TIME_ELAPSED = 0.0f;
+float DAY_ELAPSED = 0.0f;
+float YEAR_ELAPSED = 0.0f;
 
 int main(){
+
+    stbi_set_flip_vertically_on_load(true);
+    GLFWimage icon[1];
+    icon[0].pixels = stbi_load("../img/sun.jpg", &icon[0].width, &icon[0].height, 0, 4);
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -143,7 +152,7 @@ int main(){
     float M_Venus = 4.87e24f;
     float M_Earth = 5.97e24f;
     float M_Mars = 6.42e23f;
-    float M_Jupiter = 1.90e27f;
+    float M_Jupiter = 1.90e31f;
     float M_Saturn = 5.68e26f;
     float M_Uranus = 8.68e25f;
     float M_Neptune = 1.02e26f;
@@ -357,13 +366,19 @@ int main(){
 
     solarSystem.initialize();
 
+    glfwSetWindowIcon(window, 1, icon);
+
     while(!glfwWindowShouldClose(window)){
+
+        std::string title = "DAY : " + std::to_string(DAY_ELAPSED) + " YEAR : " + std::to_string(YEAR_ELAPSED);
+
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
         glfwSetCursorPosCallback(window, mouse_callback);
         glfwSetScrollCallback(window, scroll_callback);
+        glfwSetWindowTitle(window, title.c_str());
 
         processInput(window);
 
@@ -373,9 +388,12 @@ int main(){
         physicsAccumulator += deltaTime * TIME_MULTIPLIER;
         while(physicsAccumulator >= dt){
             solarSystem.step();
-            solarSystem.render(view, projection);
+            //solarSystem.render(view, projection);
             physicsAccumulator -= dt;
+            TIME_ELAPSED +=dt;
         }
+        DAY_ELAPSED = TIME_ELAPSED / (3600 * 24);
+        YEAR_ELAPSED = DAY_ELAPSED / 365;
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
