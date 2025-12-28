@@ -67,7 +67,7 @@ class CelestialObject{
                 scaled_pos = center_scaled + offset * _display_scale;
             }
             _sphere.set_position(scaled_pos);
-            _sphere.render(view, projection);
+            _sphere.render_triangles(view, projection);
         }
         void setup_verlet(){
             _r_prev[0] = _r[0] - _v[0] * dt + 0.5f * dt * dt * _total_acceleration[0];
