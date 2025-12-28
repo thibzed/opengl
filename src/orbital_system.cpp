@@ -49,7 +49,7 @@ void processInput(GLFWwindow *window){
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
-    glViewport(0,0,width,height);
+    glViewport(0,0,100,100);
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos){
@@ -152,7 +152,7 @@ int main(){
     float M_Venus = 4.87e24f;
     float M_Earth = 5.97e24f;
     float M_Mars = 6.42e23f;
-    float M_Jupiter = 1.90e31f;
+    float M_Jupiter = 1.90e27f;
     float M_Saturn = 5.68e26f;
     float M_Uranus = 8.68e25f;
     float M_Neptune = 1.02e26f;

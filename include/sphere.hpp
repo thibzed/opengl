@@ -30,9 +30,18 @@ class Sphere{
         }
         Sphere& operator=(Sphere&& other) noexcept {
             if (this != &other) {
-                if(_VAO != 0) glDeleteVertexArrays(1, &_VAO);
-                if(_VBO != 0) glDeleteBuffers(1, &_VBO);
-                if(_EBO != 0) glDeleteBuffers(1, &_EBO);
+                if(_VAO != 0){
+                    glDeleteVertexArrays(1, &_VAO);
+                    _VAO = 0;
+                } 
+                if(_VBO != 0) {
+                    glDeleteBuffers(1, &_VBO);
+                    _VBO = 0;
+                }
+                if(_EBO != 0) {
+                    glDeleteBuffers(1, &_EBO);
+                    _EBO = 0;
+                }
             _points = std::move(other._points);
             _R = other._R;
             _color = other._color;
