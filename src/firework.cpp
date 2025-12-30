@@ -1,18 +1,21 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <algorithm>
 
-#include "../include/sphere.hpp"
-#include <memory>
+#include "../include/firework.hpp"
 
 const int WIDTH = 1200;
 const int HEIGHT = 1000;
 
 struct Data {
-    std::vector<std::unique_ptr<Sphere>> firework;
+    std::vector<std::unique_ptr<firework>> firework;
     glm::mat4 view;
     glm::mat4 projection;
 };
+
+std::mt19937 generator(std::random_device{}());
+std::uniform_real_distribution<float> dist(-3.0f, 2.0f);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
     glViewport(0,0,width, height);
@@ -38,13 +41,17 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         glm::vec3 rayDir = glm::normalize(glm::vec3(farPoint - nearPoint));
         glm::vec3 rayOrigin = glm::vec3(nearPoint);
 
-        float z_plane = 0.0f;
+        float z_plane = dist(generator);
         float t = (z_plane -rayOrigin.z) / rayDir.z;
         glm::vec3 center = rayOrigin + t * rayDir;
         center.z = z_plane;
 
-        //data->firework.emplace_back(0.5f, std::vector<float>{1.0f,1.0f,1.0f}, center);
-        data->firework.push_back(std::make_unique<Sphere>(0.5f, std::vector<float>{1.0f,1.0f,1.0f}, center));
+        glm::vec3 start_point = {center.x, center.y - 2.0f, center.z};
+
+        //data->firework.push_back(std::make_unique<Sphere>(0.5f, std::vector<float>{1.0f,1.0f,1.0f}, center));
+        data->firework.push_back(std::make_unique<firework>(0.5f, center));
+        std::cout << data->firework.size() << std::endl;
+        //trainee(center);
     }
 }
 
@@ -87,8 +94,13 @@ int main(){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         for (auto& f : data.firework){
-            f->render_points(data.view, data.projection);
+            //f->set_scale({sin(glfwGetTime()),sin(glfwGetTime()),sin(glfwGetTime())});
+            //f->render_points(data.view, data.projection);
+            f->animate(data.view, data.projection);
         }
+        std::erase_if(data.firework, [](const std::unique_ptr<firework>& f){
+                                            return f->isExpired();
+                                        });
 
         S.render_points(data.view, data.projection);
 

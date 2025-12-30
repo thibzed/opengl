@@ -49,7 +49,7 @@ void processInput(GLFWwindow *window){
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
-    glViewport(0,0,100,100);
+    glViewport(0,0,width,height);
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos){
