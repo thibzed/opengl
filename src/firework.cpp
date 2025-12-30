@@ -1,9 +1,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <algorithm>
 
 #include "../include/firework.hpp"
+#include "../include/particle_generator.hpp"
 
 const int WIDTH = 1200;
 const int HEIGHT = 1000;
@@ -87,6 +87,7 @@ int main(){
     glEnable(GL_DEPTH_TEST);
 
     Sphere S(0.5f, {1.0f, 1.0f, 1.0f}, glm::vec3(0.0f,0.0f,0.0f));
+    ParticleGenerator particleGenerator (100, data.projection);
 
     while(!glfwWindowShouldClose(window)){
 
@@ -98,6 +99,7 @@ int main(){
             //f->render_points(data.view, data.projection);
             f->animate(data.view, data.projection);
         }
+        particleGenerator.draw();
         std::erase_if(data.firework, [](const std::unique_ptr<firework>& f){
                                             return f->isExpired();
                                         });

@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "sphere.hpp"
+#include "particle_generator.hpp"
 
 using namespace std::chrono;
 
@@ -16,6 +17,14 @@ GLfloat quad[] = {1.0f  , 1.0f,
 
 GLuint quad_indices[] = {0 , 1 , 2,
                          0, 1 , 3};
+
+struct particle {
+    glm::vec2 Position, Velocity;
+    glm::vec4 Color;
+    float Life;
+
+    particle() : Position(0.0f), Velocity(0.0f), Color(1.0f), Life(0.0f){}
+};
 
 class firework {
     public:
