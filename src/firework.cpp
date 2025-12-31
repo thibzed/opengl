@@ -87,12 +87,15 @@ int main(){
     glEnable(GL_DEPTH_TEST);
 
     Sphere S(0.5f, {1.0f, 1.0f, 1.0f}, glm::vec3(0.0f,0.0f,0.0f));
-    ParticleGenerator particleGenerator (100, data.projection);
+    ParticleGenerator particleGenerator (500, data.projection, data.view, S.get_center());
 
     while(!glfwWindowShouldClose(window)){
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(sin(glfwGetTime())));
 
         for (auto& f : data.firework){
             //f->set_scale({sin(glfwGetTime()),sin(glfwGetTime()),sin(glfwGetTime())});
@@ -100,6 +103,7 @@ int main(){
             f->animate(data.view, data.projection);
         }
         particleGenerator.draw();
+        particleGenerator.update();
         std::erase_if(data.firework, [](const std::unique_ptr<firework>& f){
                                             return f->isExpired();
                                         });
